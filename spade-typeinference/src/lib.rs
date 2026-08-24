@@ -1411,10 +1411,13 @@ impl TypeState {
             match self.visit_expression_result(expression, ctx, generic_list, new_type) {
                 Ok(_) => {}
                 Err(e) => {
-                    new_type
+                    if let Err(d) = new_type
                         .unify_with(&self.t_err(expression.loc()), self)
                         .commit(self, ctx)
-                        .unwrap();
+                        .into_diagnostic(expression.loc(), |d, _| d, self)
+                    {
+                        self.owned.diags.errors.push(d);
+                    }
 
                     self.owned.diags.errors.push(e);
                 }
@@ -3392,11 +3395,18 @@ impl TypeState {
             trace!("Updating constraints");
             // NOTE: Cloning here is kind of ugly
             let new_info;
-            (self.owned.constraints, new_info) = self
+            let diagnostics;
+            (self.owned.constraints, new_info, diagnostics) = self
                 .owned
                 .constraints
                 .clone()
                 .update_type_level_value_constraints(self);
+
+            let mut diagnostics = diagnostics.into_iter();
+            if let Some(diag) = diagnostics.next() {
+                self.owned.diags.errors.extend(diagnostics);
+                return Err(UnificationError::Specific(diag));
+            }
 
             if new_info.is_empty() {
                 break;
