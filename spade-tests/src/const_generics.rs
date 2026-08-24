@@ -526,3 +526,29 @@ snapshot_error! {
         }
     "
 }
+
+code_compiles! {
+    const_generic_in_struct_works,
+    "
+    struct foo<#uint A> {
+        bar: [uint<{A + 5}>; {A * 2}],
+    }
+
+    fn test() {
+        let _ = foo::<2>([0; 4]);
+    }
+    "
+}
+
+snapshot_error! {
+    const_generic_in_struct_catches_errors,
+    "
+    struct foo<#uint A> {
+        bar: uint<{A / 0}>,
+    }
+
+    fn test() {
+        let _ = foo::<2>(1);
+    }
+    "
+}

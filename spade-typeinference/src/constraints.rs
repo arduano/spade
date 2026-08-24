@@ -165,7 +165,7 @@ impl ConstraintExpr {
 
 impl ConstraintExpr {
     /// Evaluates the ConstraintExpr returning a new simplified form or a diagnostic if the expression is invalid.
-    fn evaluate(
+    pub(crate) fn evaluate(
         &self,
         resolve: &dyn Fn(&TypeVarID) -> Option<KnownType>,
         loc: &Loc<()>,
@@ -218,14 +218,22 @@ impl ConstraintExpr {
             ConstraintExpr::Product(lhs, rhs) => int_binop(lhs, rhs, &|l, r| Ok(l * r)),
             ConstraintExpr::Div(lhs, rhs) => int_binop(lhs, rhs, &|l, r| {
                 if r.is_zero() {
-                    Err(Diagnostic::error(loc, "Division by zero"))
+                    Err(Diagnostic::error(
+                        loc,
+                        "Could not perform division during constraint evaluation",
+                    )
+                    .primary_label("Division by zero"))
                 } else {
                     Ok(l / r)
                 }
             }),
             ConstraintExpr::Mod(lhs, rhs) => int_binop(lhs, rhs, &|l, r| {
                 if r.is_zero() {
-                    Err(Diagnostic::error(loc, "Modulo by zero"))
+                    Err(Diagnostic::error(
+                        loc,
+                        "Could not perform modulo during constraint evaluation",
+                    )
+                    .primary_label("Modulo by zero"))
                 } else {
                     Ok(l % r)
                 }

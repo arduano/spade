@@ -341,14 +341,14 @@ pub fn visit_type_expression(
                 TypeSpecKind::ImplTrait => default_error("Implemented traits", "implemented trait"),
                 TypeSpecKind::ImplTarget => default_error("Impl targets", "impl target"),
                 TypeSpecKind::EnumMember => default_error("Enum members", "enum member"),
-                TypeSpecKind::StructMember => default_error("Struct members", "struct member"),
                 TypeSpecKind::TraitBound => {
                     default_error("Traits used in trait bounds", "trait bound")
                 }
                 TypeSpecKind::AssociatedFnBase => {
                     default_error("Associated functions", "associated fn")
                 }
-                TypeSpecKind::Alias
+                TypeSpecKind::StructMember
+                | TypeSpecKind::Alias
                 | TypeSpecKind::Argument
                 | TypeSpecKind::OutputType
                 | TypeSpecKind::Turbofish

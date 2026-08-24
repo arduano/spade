@@ -2883,31 +2883,23 @@ impl TypeState {
         Ok(var)
     }
 
-    #[trace_typechecker]
-    pub fn visit_const_generic(
-        &self,
-        constraint: &ConstGeneric,
-        generic_list: &GenericListToken,
+    pub(crate) fn const_generic_to_constraint_expr(
+        cg: &ConstGeneric,
+        resolve_name: &dyn Fn(&Loc<NameID>) -> Result<ConstraintExpr>,
     ) -> Result<ConstraintExpr> {
         let wrap = |lhs,
                     rhs,
                     wrapper: fn(Box<ConstraintExpr>, Box<ConstraintExpr>) -> ConstraintExpr|
          -> Result<_> {
             Ok(wrapper(
-                Box::new(self.visit_const_generic(lhs, generic_list)?),
-                Box::new(self.visit_const_generic(rhs, generic_list)?),
+                Box::new(Self::const_generic_to_constraint_expr(lhs, resolve_name)?),
+                Box::new(Self::const_generic_to_constraint_expr(rhs, resolve_name)?),
             ))
         };
-        let constraint = match constraint {
-            ConstGeneric::Name(n) => {
-                let gl = self
-                    .get_generic_list(generic_list)
-                    .ok_or_else(|| diag_anyhow!(n, "Found no generic list"))?;
-                let var = gl.get(&Generic::Named(n.clone())).ok_or_else(|| {
-                    Diagnostic::bug(n, "Found non-generic argument in where clause")
-                })?;
-                ConstraintExpr::Var(*var)
-            }
+
+        let constraint = match cg {
+            ConstGeneric::Name(n) => resolve_name(n)?,
+
             ConstGeneric::Bool(val) => ConstraintExpr::Bool(*val),
             ConstGeneric::Int(val) => ConstraintExpr::Integer(val.clone()),
             ConstGeneric::Str(val) => ConstraintExpr::String(val.clone()),
@@ -2922,20 +2914,38 @@ impl TypeState {
             ConstGeneric::Gt(lhs, rhs) => wrap(lhs, rhs, ConstraintExpr::Gt)?,
             ConstGeneric::Le(lhs, rhs) => wrap(lhs, rhs, ConstraintExpr::Le)?,
             ConstGeneric::Ge(lhs, rhs) => wrap(lhs, rhs, ConstraintExpr::Ge)?,
-            ConstGeneric::LogicalNot(a) => {
-                ConstraintExpr::LogicalNot(Box::new(self.visit_const_generic(a, generic_list)?))
-            }
+            ConstGeneric::LogicalNot(a) => ConstraintExpr::LogicalNot(Box::new(
+                Self::const_generic_to_constraint_expr(a, resolve_name)?,
+            )),
             ConstGeneric::LogicalAnd(lhs, rhs) => wrap(lhs, rhs, ConstraintExpr::LogicalAnd)?,
             ConstGeneric::LogicalOr(lhs, rhs) => wrap(lhs, rhs, ConstraintExpr::LogicalOr)?,
             ConstGeneric::LogicalXor(lhs, rhs) => wrap(lhs, rhs, ConstraintExpr::LogicalXor)?,
             ConstGeneric::IntBitsFor(a) => ConstraintExpr::IntBitsToRepresent(Box::new(
-                self.visit_const_generic(a, generic_list)?,
+                Self::const_generic_to_constraint_expr(a, resolve_name)?,
             )),
             ConstGeneric::UintBitsFor(a) => ConstraintExpr::UintBitsToRepresent(Box::new(
-                self.visit_const_generic(a, generic_list)?,
+                Self::const_generic_to_constraint_expr(a, resolve_name)?,
             )),
         };
+
         Ok(constraint)
+    }
+
+    #[trace_typechecker]
+    pub fn visit_const_generic(
+        &self,
+        constraint: &ConstGeneric,
+        generic_list: &GenericListToken,
+    ) -> Result<ConstraintExpr> {
+        Self::const_generic_to_constraint_expr(constraint, &|n| {
+            let gl = self
+                .get_generic_list(generic_list)
+                .ok_or_else(|| diag_anyhow!(n, "Found no generic list"))?;
+            let var = gl
+                .get(&Generic::Named(n.clone()))
+                .ok_or_else(|| Diagnostic::bug(n, "Found non-generic argument in where clause"))?;
+            Ok(ConstraintExpr::Var(*var))
+        })
     }
 }
 
