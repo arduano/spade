@@ -320,6 +320,8 @@ fn visit_expression(
         }
         spade_hir::ExprKind::Match(cond, variants) => {
             visit_expression(cond, linear_state, ctx)?;
+            linear_state.consume_expression(cond)?;
+
             for (pat, if_cond, expr) in variants {
                 linear_state.push_pattern(pat, ctx)?;
                 if let Some(if_cond) = if_cond {

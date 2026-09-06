@@ -1887,13 +1887,31 @@ impl ExprLocal for Loc<Expression> {
                 }
 
                 result.append(operand.lower(ctx)?);
-                let mut operands = vec![];
+                let mut operands = vec![operand.variable(ctx)?];
                 for (pat, if_cond, result_expr) in branches {
                     let pat_ty = ctx
                         .types
                         .concrete_type_of(pat, ctx.symtab.symtab(), &ctx.item_list.types)?
                         .to_mir_type();
-                    result.append(pat.lower(operand.variable(ctx)?, pat_ty, ctx)?);
+
+                    let local_op_name = mir::ValueName::Expr(ctx.idtracker.next()).near_loc(&self);
+
+                    result.append_secondary(
+                        vec![
+                            mir::Statement::Binding(mir::Binding {
+                                name: local_op_name.clone(),
+                                operator: mir::Operator::Nop,
+                                operands: vec![],
+                                ty: pat_ty.clone(),
+                                loc: Some(self.loc()),
+                            })
+                            .near_loc(&self),
+                        ],
+                        self,
+                        "Local operand",
+                    );
+
+                    result.append(pat.lower(local_op_name.clone(), pat_ty, ctx)?);
 
                     let if_cond = match if_cond {
                         Some(c) => {
@@ -1903,12 +1921,13 @@ impl ExprLocal for Loc<Expression> {
                         None => None,
                     };
 
-                    let cond = pat.condition(&operand.variable(ctx)?, if_cond, ctx)?;
+                    let cond = pat.condition(&local_op_name, if_cond, ctx)?;
 
                     result.append_secondary(cond.statements, pat, "Pattern condition");
 
                     result.append(result_expr.lower(ctx)?);
 
+                    operands.push(local_op_name);
                     operands.push(cond.result_name);
                     operands.push(result_expr.variable(ctx)?);
                 }

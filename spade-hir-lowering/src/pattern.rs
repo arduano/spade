@@ -435,7 +435,7 @@ impl std::fmt::Display for DeconstructedPattern {
                 ConcreteType::Integer(_) => unreachable!("Pattern on type level integer"),
                 ConcreteType::Bool(_) => unreachable!("Pattern on type level bool"),
                 ConcreteType::String(_) => unreachable!("Pattern on a type level string"),
-                ConcreteType::Backward(_) => unreachable!("Pattern on backward type"),
+                ConcreteType::Backward(_) => write!(f, "_"),
                 ConcreteType::CopyView(_) => unreachable!("Pattern on copy view"),
             },
             Constructor::Variant(idx) => match &self.ty {

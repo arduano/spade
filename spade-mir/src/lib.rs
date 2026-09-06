@@ -217,9 +217,18 @@ pub enum Operator {
     Concat,
     /// Select [1] if [0] else [2]
     Select,
-    /// Corresponds to a match statement. If value [0] is true, select [1], if [2] holds, select
-    /// [3] and so on. Values are priorotized in order, i.e. if both [0] and [2] hold, [1] is
-    /// selected
+    /// Corresponds to a match statement.
+    ///
+    /// `[0]` contains the value to match on. The subsequent values are a triple of branches, i.e. for every branch `i`
+    ///
+    /// - `[1 + i]`: Local copy of `[0]` which is used for inv signals.
+    /// - `[1 + i+1]`: The condition for this branch to be selected
+    /// - `[1 + i+2]`: The value to select when the branch is selected. If it contains inv
+    ///   wires, those are connected to the local copy
+    ///
+    /// The backward wires of `[0]` are connected to the first local copy of the branch that was selected
+    ///
+    /// Branches are prioritized in order, so if more than one branch matches, the earlier one wins.
     // NOTE: We may want to add a MatchUnique for cases where we can guarantee uniqueness,
     // typically match statements with no wildcards
     Match,

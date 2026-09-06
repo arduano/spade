@@ -280,3 +280,23 @@ snapshot_error! {
         }
     "
 }
+
+snapshot_error! {
+    match_consumes_input,
+    "
+        fn e(p: (uint<1>, inv bool)) {
+            let _ = match p {
+                (0, pi) => {
+                    set pi = false;
+                    false
+                },
+                (1, pi) => {
+                    set pi = true;
+                    true
+                },
+            };
+
+            set p.1 = false;
+        }
+    "
+}
