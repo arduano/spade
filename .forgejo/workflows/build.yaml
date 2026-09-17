@@ -1,6 +1,10 @@
 name: builds and tests
 on:
   push:
+    # On non-main branches we'll end up duplicating the run if we run on all pushes
+    # This way we only run on PRs or main.
+    branches:
+      - main
   pull_request:
 jobs:
   test:
