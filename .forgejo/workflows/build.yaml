@@ -173,12 +173,38 @@ jobs:
         run: |
           cargo build --locked --target wasm32-unknown-unknown -p spade-surfer-plugin --release
           cp target/wasm32-unknown-unknown/release/spade_surfer_plugin.wasm .
+
+  build:wheel-manylinux:
+    runs-on: lysator
+    container:
+      image: quay.io/pypa/manylinux_2_34_x86_64
+    steps:
+      ### Checkout
+      - name: "Pre-clone dependencies"
+        run: |
+          apk add nodejs git tar
+      - name: "Checkout"
+        uses: actions/checkout@v5
+        with:
+          submodules: 'true'
+      ####
+      - name: setup
+        run: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $CARGO_HOME/env && /opt/python/cp39-cp39/bin/pip install maturin
+      - name: build
+        run: |
+          /opt/python/cp39-cp39/bin/maturin build -i /opt/python/cp39-cp39/bin/python -m spade-python/Cargo.toml
+      - name: upload
+        uses: https://code.forgejo.org/forgejo/upload-artifact@v4
+        with:
+          path: ${CARGO_TARGET_DIR}/wheels/*.whl
+
         
         
 # yowasp:publish:
 # trawler:
 
 
-# .build:wheel-manylinux:
 # .build:static:
 
