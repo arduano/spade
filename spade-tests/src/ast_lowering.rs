@@ -973,7 +973,6 @@ snapshot_error! {
 snapshot_error! {
     inst_function_used,
     "
-        // See https://gitlab.com/spade-lang/spade/-/issues/160
         mod a {
             pub fn foo() -> bool { true }
         }

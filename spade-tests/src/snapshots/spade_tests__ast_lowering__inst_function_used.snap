@@ -1,7 +1,6 @@
 ---
 source: spade-tests/src/ast_lowering.rs
 ---
-// See https://gitlab.com/spade-lang/spade/-/issues/160
 mod a {
     pub fn foo() -> bool { true }
 }

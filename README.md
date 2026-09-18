@@ -1,11 +1,7 @@
 <img src="misc/spadefish.svg" />
 
-[![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline-status/spade-lang/spade?branch=master)](https://img.shields.io/gitlab/pipeline-status/spade-lang/spade?branch=master)
-[![Gitlab code coverage](https://img.shields.io/gitlab/pipeline-coverage/spade-lang/spade?branch=master)](https://img.shields.io/gitlab/pipeline-coverage/spade-lang/spade?branch=master)
-[![GitLab tag (latest by date)](https://img.shields.io/gitlab/v/tag/spade-lang/spade)](https://img.shields.io/gitlab/v/tag/spade-lang/spade)
-[![GitLab last commit](https://img.shields.io/gitlab/last-commit/spade-lang/spade)](https://img.shields.io/gitlab/last-commit/spade-lang/spade)
-[![GitLab contributors](https://img.shields.io/gitlab/contributors/spade-lang/spade)](https://img.shields.io/gitlab/contributors/spade-lang/spade)
-[![GitLab language count](https://img.shields.io/gitlab/languages/count/spade-lang/spade)](https://img.shields.io/gitlab/languages/count/spade-lang/spade)
+[![Pipeline status](https://codeberg.org/spade-lang/spade/badges/workflows/build.yaml/badge.svg?label=build)](https://codeberg.org/spade-lang/spade/actions?workflow=build.yaml)
+[![Release](https://codeberg.org/spade-lang/spade/badges/release.svg)](https://codeberg.org/spade-lang/spade/releases)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7713114.svg)](https://doi.org/10.5281/zenodo.7713114)
 ![Join Discord](https://img.shields.io/discord/962274366043873301?logo=discord&logoColor=white&label=Discord&color=5865F2)
 
