@@ -15,15 +15,15 @@ entity test() -> bool {
 error: Unexpected `inst` for function call
   ┌─ testinput:9:5
   │
-3 │     pub fn foo() -> bool { true }
+2 │     pub fn foo() -> bool { true }
   │         -- foo is defined as a function here
   ·
-9 │     inst foo()
+8 │     inst foo()
   │     ^^^^ --- Because foo is a function
   │     │     
   │     Unexpected `inst`
   │
   = Consider removing the `inst`
   │
-9 │     inst foo()
+8 │     inst foo()
   │     ----
