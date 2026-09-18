@@ -46,6 +46,6 @@ For now, we’re taking a cautious approach to these tools due to their effects 
 
 ## License
 
-The spade standard library (all files located in the `spade-compiler/stdlib` directory) is licensed under the terms of both the [MIT license](MIT License) and the [Apache License](LICENSE-APACHE2.0.txt).
+The spade standard library (all files located in the `spade-compiler/stdlib` directory) is licensed under the terms of both the [MIT license](LICENSE-MIT.txt) and the [Apache License](LICENSE-APACHE2.0.txt).
 
 All other source code, including each of the crates that comprise spade, are licensed under the [EUPL-1.2 license](LICENSE-EUPL-1.2.txt).
