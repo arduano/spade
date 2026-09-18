@@ -3835,7 +3835,7 @@ dependencies = [
 [[package]]
 name = "swim"
 version = "0.20.0"
-source = "git+https://codeberg.org/spade-lang/swim.git?rev=afc77e2f1d0fc987570910805823eb93ce4601cb#afc77e2f1d0fc987570910805823eb93ce4601cb"
+source = "git+https://codeberg.org/spade-lang/swim.git#c88f2f4237b3bf310729dca478d8d4adb2d08bc5"
 dependencies = [
  "ansi-escapes",
  "async-trait",
