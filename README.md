@@ -1,6 +1,6 @@
 <img src="misc/spadefish.svg" />
 
-[![Pipeline status](https://codeberg.org/spade-lang/spade/badges/workflows/build.yaml/badge.svg?label=build)](https://codeberg.org/spade-lang/spade/actions?workflow=build.yaml)
+[![Pipeline status](https://codeberg.org/spade-lang/spade/badges/workflows/build.yaml/badge.svg?branch=main&label=build)](https://codeberg.org/spade-lang/spade/actions?workflow=build.yaml)
 [![Release](https://codeberg.org/spade-lang/spade/badges/release.svg)](https://codeberg.org/spade-lang/spade/releases)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7713114.svg)](https://doi.org/10.5281/zenodo.7713114)
 ![Join Discord](https://img.shields.io/discord/962274366043873301?logo=discord&logoColor=white&label=Discord&color=5865F2)
