@@ -35,7 +35,7 @@ spade-types = {path = "spade-types", version = "0.20.0"}
 spade-query = {path = "spade-query", version = "0.20.0"}
 
 bumpalo = { version = "3.14.0" }
-clap = { version = "4.4", features = ["derive"] }
+clap = { version = "4.6", features = ["derive"] }
 color-eyre = "0.6.1"
 derive-where = "1.2.7"
 spade-codespan = {version = "0.12.0", features = ["serde"]}
