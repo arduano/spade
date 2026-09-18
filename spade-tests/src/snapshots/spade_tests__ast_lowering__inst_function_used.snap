@@ -13,7 +13,7 @@ entity test() -> bool {
 
 
 error: Unexpected `inst` for function call
-  ┌─ testinput:9:5
+  ┌─ testinput:8:5
   │
 2 │     pub fn foo() -> bool { true }
   │         -- foo is defined as a function here
