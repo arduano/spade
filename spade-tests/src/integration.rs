@@ -551,6 +551,39 @@ snapshot_mir! {
 }
 
 code_compiles! {
+    field_access_through_view_of_inverted_struct,
+    "
+        struct S {
+            a: bool,
+            b: inv bool,
+        }
+
+        entity top(s: &inv S) -> bool {
+            let _ = s.a;
+            *s.b
+        }
+    "
+}
+
+code_compiles! {
+    nested_field_access_through_view_of_inverted_struct,
+    "
+        struct Inner {
+            a: inv bool,
+        }
+
+        struct Outer {
+            inner: Inner,
+            flag: bool,
+        }
+
+        entity top(s: &inv Outer) -> bool {
+            *s.inner.a
+        }
+    "
+}
+
+code_compiles! {
     wires_are_allowed_in_fn_args,
     "
         fn a(x: &bool) {}
