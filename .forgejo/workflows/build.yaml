@@ -10,18 +10,19 @@ jobs:
   test:
     runs-on: ["fbs", "xlarge", "debian-13-x86_64"]
     container:
-      image: rust:1.88-alpine
+      image: rust:1.88
     steps:
       - name: "Pre-clone checkout"
         run: |
-          apk add nodejs git
+          apt-get update
+          apt-get install -y nodejs
       - name: "Checkout"
         uses: actions/checkout@v5
         with:
           submodules: 'true'
       - name: dependencies
         run: |
-            apk add git musl-dev g++ openssl-dev openssl-libs-static jemalloc-static make tar
+          apt-get install build-essential
       - uses: https://github.com/Swatinem/rust-cache@v2
       - name: cargo test
         run: |
@@ -177,6 +178,11 @@ jobs:
         run: |
           cargo build --locked --target wasm32-unknown-unknown -p spade-surfer-plugin --release
           cp target/wasm32-unknown-unknown/release/spade_surfer_plugin.wasm .
+      - name: upload
+        uses: https://code.forgejo.org/forgejo/upload-artifact@v4
+        with:
+          name: spade_surfer_plugin
+          path: spade_surfer_plugin.wasm
 
   build:wheel-manylinux:
     runs-on: ["fbs", "medium", "debian-13-x86_64"]
