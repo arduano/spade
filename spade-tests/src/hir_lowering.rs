@@ -1421,7 +1421,7 @@ mod tests {
             extern fn sub(x: bool, y: bool) -> bool;
 
             fn test(a: bool, b: bool) -> bool {
-                sub$(y: a, x: b)
+                sub(y: a, x: b)
             }
         "#;
 
@@ -1591,7 +1591,7 @@ mod tests {
             }
 
             entity test(x: X) -> bool {
-                x.a$(arg: true)
+                x.a(arg: true)
             }
         "#;
 
@@ -2258,7 +2258,7 @@ mod argument_list_tests {
         "extern fn test(a: bool, b: bool) -> bool;
         fn main() -> bool {
             let (a, b, c) = (true, true, true);
-            test$(a)
+            test(a:)
         }
         "
     }
@@ -2268,7 +2268,7 @@ mod argument_list_tests {
         "extern fn test(a: bool, b: bool) -> bool;
         fn main() -> bool {
             let (a, b, c) = (true, true, true);
-            test$(a, a, b)
+            test(a:, a:, b:)
         }
         "
     }
@@ -2277,7 +2277,7 @@ mod argument_list_tests {
         long_named_argument_missing,
         "extern fn test(a: bool, b: bool) -> bool;
         fn main() -> bool {
-            test$(a: true)
+            test(a: true)
         }
         "
     }
@@ -2286,7 +2286,7 @@ mod argument_list_tests {
         long_duplicate_named_arg,
         "extern fn test(a: bool, b: bool) -> bool;
         fn main() -> bool {
-            test$(a: true, a: true, b: true)
+            test(a: true, a: true, b: true)
         }
         "
     }
@@ -2295,7 +2295,7 @@ mod argument_list_tests {
         long_fake_named_arg,
         "extern fn test(a: bool, b: bool) -> bool;
         fn main() -> bool {
-            test$(a: true, c: true, b: true)
+            test(a: true, c: true, b: true)
         }
         "
     }

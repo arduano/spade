@@ -1267,7 +1267,7 @@ mod trait_tests {
             }
 
             fn main(x: X) -> bool {
-                x.test$(y: 1)
+                x.test(y: 1)
             }
         "
     }
@@ -1281,7 +1281,7 @@ mod trait_tests {
             }
 
             fn main(x: X) -> bool {
-                x.test$(self: X())
+                x.test(self: X())
             }
         "
     }

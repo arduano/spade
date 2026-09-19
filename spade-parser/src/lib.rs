@@ -15,7 +15,7 @@ use logos::{Lexer, Span};
 use spade_ast::token::{LiteralKind, TokenKind};
 use spade_diagnostics::diag_list::{DiagList, ResultExt};
 use statements::{AssertParser, BindingParser, DeclParser, LabelParser, RegisterParser, SetParser};
-use tracing::{Level, debug, event};
+use tracing::{Level, event};
 
 use spade_ast::{
     ArgumentList, ArgumentPattern, Attribute, AttributeList, BitLiteral, Block, CallKind,
@@ -1121,51 +1121,176 @@ impl<'a> Parser<'a> {
 
     #[trace_parser]
     fn argument_list(&mut self, braces: ExprBraces) -> Result<Option<Loc<ArgumentList>>> {
-        let (closer_kind, is_named) = match (self.peek()?.kind, braces) {
+        enum ListKind {
+            Paren, // (expr, expr, ...) / (id: expr, id:, ...)
+            Brace, // { id: expr, id, ... } / $(id: expr, id, ...)
+        }
+
+        enum ArgKind {
+            Positional(Loc<Expression>),
+            Named(Loc<NamedArgument>, Loc<()>),
+        }
+
+        let (closer_kind, list_kind) = match (self.peek()?.kind, braces) {
             (TokenKind::Dollar, _) => {
-                self.eat_unconditional()?;
-                (TokenKind::CloseParen, true)
+                let dollar = self.eat_unconditional()?;
+                let loc = ().at(self.file_id(), &dollar.span);
+
+                self.diags.errors.push(
+                    Diagnostic::warning(&loc, "`$` syntax for named arguments is deprecated")
+                        .primary_label("Use of deprecated named argument syntax"),
+                );
+
+                (TokenKind::CloseParen, ListKind::Brace)
             }
             (TokenKind::OpenBrace, ExprBraces::Forbid) => return Ok(None),
-            (TokenKind::OpenBrace, ExprBraces::Allow) => (TokenKind::CloseBrace, true),
-            (TokenKind::OpenParen, _) => (TokenKind::CloseParen, false),
+            (TokenKind::OpenBrace, ExprBraces::Allow) => (TokenKind::CloseBrace, ListKind::Brace),
+            (TokenKind::OpenParen, _) => (TokenKind::CloseParen, ListKind::Paren),
             _ => return Ok(None),
         };
 
         let opener = self.eat_unconditional()?;
 
-        let argument_list = if is_named {
-            let args = self
-                .comma_separated(Self::named_argument, &closer_kind)
-                .extra_expected(vec![":"])
-                .map_err(|e| {
-                    debug!("check named arguments =");
-                    let Ok(tok) = self.peek() else {
-                        return e;
-                    };
-                    debug!("{:?}", tok);
-                    if tok.kind == TokenKind::Assignment {
-                        e.span_suggest_replace(
-                            "named arguments are specified with `:`",
-                            // FIXME: expand into whitespace
-                            // lifeguard: spade#309
-                            tok.loc(),
-                            ":",
-                        )
-                    } else {
-                        e
-                    }
-                })?
-                .into_iter()
-                .map(Loc::strip)
-                .collect();
-            ArgumentList::Named(args)
-        } else {
-            let args = self
-                .comma_separated(|p| p.expression(ExprBraces::Allow), &closer_kind)
-                .no_context()?;
+        let argument_list = match list_kind {
+            ListKind::Brace => {
+                let args = self
+                    .comma_separated(Self::named_argument, &closer_kind)
+                    .extra_expected(vec![":"])
+                    .map_err(|e| {
+                        let Ok(tok) = self.peek() else {
+                            return e;
+                        };
+                        if tok.kind == TokenKind::Assignment {
+                            e.span_suggest_replace(
+                                "named arguments are specified with `:`",
+                                // FIXME: expand into whitespace
+                                // lifeguard: spade#309
+                                tok.loc(),
+                                ":",
+                            )
+                        } else {
+                            e
+                        }
+                    })?
+                    .into_iter()
+                    .map(Loc::strip)
+                    .collect();
 
-            ArgumentList::Positional(args)
+                ArgumentList::Named(args)
+            }
+            ListKind::Paren => {
+                let args = self
+                    .comma_separated(
+                        |s| {
+                            let base = s.expression(ExprBraces::Allow)?;
+
+                            if let Expression::Identifier(path) = &base.inner {
+                                let next = s.peek()?;
+                                if path.0.len() == 1 && matches!(next.kind, TokenKind::Colon) {
+                                    s.eat_unconditional()?;
+
+                                    // Safe index since we check the length earlier
+                                    let name = path.tail().unwrap_named().clone();
+
+                                    if let Some(value) = s.maybe_expression(ExprBraces::Allow)? {
+                                        let loc = ().between(s.file_id(), &next, &value);
+                                        Ok(ArgKind::Named(
+                                            NamedArgument::Full(name.clone(), value)
+                                                .between_locs(&name, &loc),
+                                            loc,
+                                        ))
+                                    } else {
+                                        let loc = ().at(s.file_id(), &next);
+                                        Ok(ArgKind::Named(
+                                            NamedArgument::Short(name.clone())
+                                                .between_locs(&name, &loc),
+                                            loc,
+                                        ))
+                                    }
+                                } else {
+                                    Ok(ArgKind::Positional(base))
+                                }
+                            } else {
+                                Ok(ArgKind::Positional(base))
+                            }
+                        },
+                        &closer_kind,
+                    )
+                    .extra_expected(vec![":"])
+                    .map_err(|e| {
+                        let Ok(tok) = self.peek() else {
+                            return e;
+                        };
+                        if tok.kind == TokenKind::Assignment {
+                            e.span_suggest_replace(
+                                "named arguments are specified with `:`",
+                                // FIXME: expand into whitespace
+                                // lifeguard: spade#309
+                                tok.loc(),
+                                ":",
+                            )
+                        } else {
+                            e
+                        }
+                    })?
+                    .into_iter()
+                    .collect::<Vec<_>>();
+
+                match args.as_slice() {
+                    [] => ArgumentList::Positional(vec![]),
+                    [ArgKind::Positional(pos), rest @ ..] => {
+                        let mut all_args = vec![pos.clone()];
+
+                        for arg in rest {
+                            match arg {
+                                ArgKind::Named(named, named_part) => {
+                                    return Err(Diagnostic::error(
+                                        named,
+                                        "Mixing positional and named arguments",
+                                    )
+                                    .primary_label("Expected another positional argument")
+                                    .secondary_label(pos, "Because this is a positional argument")
+                                    .span_suggest_remove(
+                                        "If you meant to just pass `{name}`, remove the colon",
+                                        named_part,
+                                    ));
+                                }
+                                ArgKind::Positional(arg) => all_args.push(arg.clone()),
+                            }
+                        }
+                        ArgumentList::Positional(all_args)
+                    }
+                    [ArgKind::Named(named, _), rest @ ..] => {
+                        let mut all_args = vec![named.inner.clone()];
+
+                        for arg in rest {
+                            match arg {
+                                ArgKind::Named(named, _) => all_args.push(named.inner.clone()),
+                                ArgKind::Positional(arg) => {
+                                    let base_diag = Diagnostic::error(
+                                        arg,
+                                        "Mixing positional and named arguments",
+                                    )
+                                    .primary_label("Expected a named argument")
+                                    .secondary_label(named, "Because this is a named argument");
+
+                                    return Err(if let Expression::Identifier(_) = &arg.inner {
+                                        base_diag.span_suggest_insert_after("Consider adding `:` to make this a shorthand named argument", arg, ":")
+                                    } else {
+                                        base_diag.span_suggest_insert_before(
+                                            "Consider specifying the argument name",
+                                            arg,
+                                            "/* name */: ",
+                                        )
+                                    });
+                                }
+                            }
+                        }
+
+                        ArgumentList::Named(all_args)
+                    }
+                }
+            }
         };
         let end = self.eat_unconditional()?;
         let span = lspan(opener.span).merge(lspan(end.span));

@@ -931,7 +931,7 @@ snapshot_error! {
 
     entity main(clk: clock) -> bool {
         let b: int<3> = 0;
-        inst e$(clk, a: b)
+        inst e(clk:, a: b)
     }
     "
 }
@@ -945,7 +945,7 @@ snapshot_error! {
 
     entity main(clk: clock) -> bool {
         let a: int<3> = 0;
-        inst e$(clk, a)
+        inst e(clk:, a:)
     }
     "
 }
@@ -1430,17 +1430,17 @@ snapshot_error! {
             let full_w = read_ptr_w == 0;
 
 
-            inst fifo_read_side$(
-                    write_ptr_w,
-                    ram_read,
-                    read_ptr_wire,
+            inst fifo_read_side(
+                    write_ptr_w:,
+                    ram_read:,
+                    read_ptr_wire:,
                 )
         }
 
         entity fifo_test_harness(
             ram_read: ReadPort_<4>
         ) {
-            let _ = inst fifo::<4>$(ram_read);
+            let _ = inst fifo::<4>(ram_read:);
         }
     "
 }

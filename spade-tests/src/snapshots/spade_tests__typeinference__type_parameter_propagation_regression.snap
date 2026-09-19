@@ -25,17 +25,17 @@ entity fifo<#uint W>(
     let full_w = read_ptr_w == 0;
 
 
-    inst fifo_read_side$(
-            write_ptr_w,
-            ram_read,
-            read_ptr_wire,
+    inst fifo_read_side(
+            write_ptr_w:,
+            ram_read:,
+            read_ptr_wire:,
         )
 }
 
 entity fifo_test_harness(
     ram_read: ReadPort_<4>
 ) {
-    let _ = inst fifo::<4>$(ram_read);
+    let _ = inst fifo::<4>(ram_read:);
 }
 
 

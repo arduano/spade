@@ -444,12 +444,15 @@ code_compiles! {
 snapshot_error! {
     incorrect_named_args_gives_good_error,
     "
-        fn f(x: bool) -> bool {
-            x
+        struct S { a: bool }
+        fn f(a: bool) -> bool {
+            a
         }
-        fn top() -> bool {
-            let a = true;
-            f$(x = a)
+        fn s() -> S {
+            S { a = true }
+        }
+        fn c() -> bool {
+            f(a = true)
         }
     "
 }
