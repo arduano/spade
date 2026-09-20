@@ -2,20 +2,20 @@
 source: spade-tests/src/data_requirements.rs
 ---
 pipeline(0) test(clk: clock) {
-    let r = clk;
+    let r = port();
 }
 
 
-error: Trait bound not satisfied. clock does not implement core::marker::Data
+error: Trait bound not satisfied. (_, inv _) does not implement core::marker::Copy
   ┌─ testinput:2:9
   │    
 1 │     pipeline(0) test(clk: clock) {
   │ ╭────────────────────────────────'
   │ │ ╭──────────────────────────────'
-2 │ │ │     let r = clk;
+2 │ │ │     let r = port();
   │ │ │         ^
   │ │ │         │
-  │ │ │         clock does not implement core::marker::Data
+  │ │ │         (_, inv _) does not implement core::marker::Copy
   │ │ │         The type of this expression is not `Data + Copy` which means it cannot be stored in a register.
 3 │ │ │ }
   │ ╰─│─' Required because of the trait bound specified here
@@ -25,5 +25,5 @@ error: Trait bound not satisfied. clock does not implement core::marker::Data
   = help: You can learn more about `Data` and `Copy` here: https://docs.spade-lang.org/wires.html
   = Consider making the binding a wire
   │
-2 │     let wire r = clk;
+2 │     let wire r = port();
   │         +++++

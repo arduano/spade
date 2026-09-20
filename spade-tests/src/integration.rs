@@ -729,6 +729,18 @@ snapshot_error! {
     lambdas_that_capture_non_data_are_non_data,
     "
         entity test(clk: clock) {
+            let l = fn || {
+                let _ = clk;
+            };
+            reg(clk) r = l;
+        }
+    "
+}
+
+snapshot_error! {
+    lambdas_that_capture_non_copy_are_non_copy,
+    "
+        entity test(clk: clock) {
             let w = port().1;
             let l = fn || {
                 set w = 0u32;

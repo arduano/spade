@@ -3,7 +3,7 @@ source: spade-tests/src/auto_traits.rs
 ---
 struct A {
     x: bool,
-    y: inv bool,
+    y: clock,
 }
 
 fn needs_data<T: Data>(x: T) {}
