@@ -648,6 +648,40 @@ impl TypeState {
         ))
     }
 
+    pub fn new_generic_data_copy(&mut self, loc: Loc<()>, ctx: &Context) -> TypeVarID {
+        let id = self.new_typeid();
+        let t_data = TraitReq {
+            name: TraitName::Named(
+                None,
+                ctx.symtab
+                    .lang_item(LangItem::DataTrait)
+                    .clone()
+                    .at_loc(&loc),
+            ),
+            type_params: vec![],
+        }
+        .at_loc(&loc);
+
+        let t_copy = TraitReq {
+            name: TraitName::Named(
+                None,
+                ctx.symtab
+                    .lang_item(LangItem::CopyTrait)
+                    .clone()
+                    .at_loc(&loc),
+            ),
+            type_params: vec![],
+        }
+        .at_loc(&loc);
+
+        self.add_type_var(TypeVar::Unknown(
+            loc,
+            id,
+            TraitList::from_vec(vec![t_data, t_copy]),
+            MetaType::Type,
+        ))
+    }
+
     pub fn new_generic_copy_view(&mut self, loc: Loc<()>, ctx: &Context) -> TypeVarID {
         let id = self.new_typeid();
         let t = TraitReq {
@@ -844,7 +878,7 @@ impl TypeState {
             match (pipeline_loc, wire) {
                 (Some(pipeline_loc), None) => {
                     TypedExpression::Name(name.inner.clone())
-                        .unify_with(&self.new_generic_data(pipeline_loc, ctx), self)
+                        .unify_with(&self.new_generic_data_copy(pipeline_loc, ctx), self)
                         .commit(self, ctx)
                         .into_diagnostic(
                             name,
@@ -852,13 +886,14 @@ impl TypeState {
                                 diag.secondary_label(
                                     name,
                                     format!(
-                                        "The type of this argument is not Data which means it cannot be stored in a register."
+                                        "The type of this argument is not `Data + Copy` which means it cannot be stored in a register."
                                     ),
                                 )
                                 .secondary_label(pipeline_loc, "The value needs to be in a register because it is in this pipeline")
                                 .span_suggest_insert_before("Consider making the argument a wire", name, "wire ")
-                                .help("An value not being Data typically means it contains at least one `inv` type")
-                                .help(format!("You can learn more about `Data` here: {}", WIRE_DOCS))
+                                .help("An value not being `Data` typically means it contains at least one `clock` type")
+                                .help("An value not being `Copy` typically means it contains at least one `inv` type")
+                                .help(format!("You can learn more about `Data` and `Copy` here: {}", WIRE_DOCS))
                             },
                             self,
                         )?;
@@ -896,7 +931,7 @@ impl TypeState {
             Statement::Expression(e) => self.expression_data_constraints(e, pipeline_loc, ctx)?,
             Statement::Register(reg) => {
                 TypedExpression::Id(reg.value.id)
-                    .unify_with(&self.new_generic_data(reg.keyword, ctx), self)
+                    .unify_with(&self.new_generic_data_copy(reg.keyword, ctx), self)
                     .commit(self, ctx)
                     .into_diagnostic(
                         &reg.pattern,
@@ -904,10 +939,10 @@ impl TypeState {
                             diag.secondary_label(
                                 &reg.value,
                                 format!(
-                                    "The type of this expression is not Data which means it cannot be stored in a register."
+                                    "The type of this expression is not `Data + Copy` which means it cannot be stored in a register."
                                 ),
                             )
-                            .help("An expression not being Data typically means it contains at least one `inv` type")
+                            .help("An expression not being `Data + Copy` means it contains at least one `inv` or `clock` type")
                                 .help(format!("You can learn more about `Data` here: {}", WIRE_DOCS))
                         },
                         self,
@@ -942,7 +977,7 @@ impl TypeState {
                 match (pipeline_loc, wire) {
                     (Some(pipeline_loc), None) => {
                         TypedExpression::Name(name.inner.clone())
-                            .unify_with(&self.new_generic_data(*pipeline_loc, ctx), self)
+                            .unify_with(&self.new_generic_data_copy(*pipeline_loc, ctx), self)
                             .commit(self, ctx)
                             .into_diagnostic(
                                 name,
@@ -950,13 +985,13 @@ impl TypeState {
                                     diag.secondary_label(
                                         name,
                                         format!(
-                                            "The type of this expression is not Data which means it cannot be stored in a register."
+                                            "The type of this expression is not `Data + Copy` which means it cannot be stored in a register."
                                         ),
                                     )
                                     .secondary_label(pipeline_loc, "The value needs to be in a register because it is in this pipeline")
                                     .span_suggest_insert_before("Consider making the binding a wire", name, "wire ")
-                                    .help("An expression not being Data typically means it contains at least one `inv` type")
-                                    .help(format!("You can learn more about `Data` here: {}", WIRE_DOCS))
+                                    .help("An expression not being `Data + Copy` typically means it contains at least one `inv` type")
+                                    .help(format!("You can learn more about `Data` and `Copy` here: {}", WIRE_DOCS))
                                 },
                                 self,
                             )?;
@@ -1043,7 +1078,7 @@ impl TypeState {
                                     "The result of an if-expression must be Data."
                                 ),
                             )
-                            .help("An expression not being Data typically means it contains at least one `inv` type")
+                            .help("An expression not being `Data` typically means it contains at least one `clock` type")
                                 .help(format!("You can learn more about `Data` here: {}", WIRE_DOCS))
                         },
                         self,
@@ -1064,7 +1099,7 @@ impl TypeState {
                                     "The result of a match-expression must be Data."
                                 ),
                             )
-                            .help("An expression not being Data typically means it contains at least one `inv` type")
+                            .help("An expression not being `Data` typically means it contains at least one `clock` type")
                             .help(format!("You can learn more about `Data` here: {}", WIRE_DOCS))
                         },
                         self,
