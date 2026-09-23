@@ -19,8 +19,8 @@ use crate::global_symbols::{
 };
 use crate::{
     Context, SelfContext, TypeSpecKind, associated_type, unit_head, visit_default_type_expression,
-    visit_trait_spec, visit_trait_specs, visit_type_expression, visit_type_params, visit_type_spec,
-    visit_unit, visit_where_clauses,
+    visit_trait_spec, visit_trait_specs, visit_type_params, visit_type_spec, visit_unit,
+    visit_where_clauses,
 };
 
 pub fn visit_impl(block: &Loc<ast::ImplBlock>, ctx: &mut Context) -> Result<Vec<hir::Item>> {
@@ -76,7 +76,7 @@ pub fn visit_impl_inner(block: &Loc<ast::ImplBlock>, ctx: &mut Context) -> Resul
         );
     }
 
-    let (target, target_args) = get_impl_target(block, ctx)?;
+    let (target, target_args) = canonicalize_impl_target(target_type.clone(), ctx)?;
 
     let visited_where_clauses = visit_where_clauses(&block.where_clauses, ctx)?;
 
@@ -317,76 +317,86 @@ pub fn get_or_create_trait(
     }
 }
 
-pub fn get_impl_target(
-    block: &Loc<ast::ImplBlock>,
+pub fn canonicalize_impl_target(
+    target_spec: Loc<hir::TypeSpec>,
     ctx: &mut Context,
 ) -> Result<(hir::ImplTarget, Vec<hir::TypeExpression>)> {
-    match &block.target.inner {
-        spade_ast::TypeSpec::Array { inner, size } => Ok((
+    match target_spec.inner {
+        hir::TypeSpec::Array { inner, size } => Ok((
             hir::ImplTarget::Array,
-            vec![
-                visit_type_expression(inner, &TypeSpecKind::ImplTarget, ctx)?,
-                visit_type_expression(size, &TypeSpecKind::ImplTarget, ctx)?,
-            ],
+            vec![hir::TypeExpression::TypeSpec(inner.inner), size.inner],
         )),
-        spade_ast::TypeSpec::Named(name, args) => {
-            let (target_name, sym) = ctx.symtab.lookup_type_symbol(&name, true)?;
+        hir::TypeSpec::Declared(name, args) => {
+            let sym = ctx.symtab.type_symbol_by_id(&name);
+
+            // If we impl on a type alias, we need to canonicalize it to the base type
+            if let TypeSymbol::Declared(_, _, TypeDeclKind::Alias) = &sym.inner {
+                let hir::TypeDeclaration {
+                    name: _,
+                    kind: _,
+                    generic_args: _,
+                } = &ctx.item_list.types.get(&name).unwrap().inner;
+
+                // FIXME: support true matching and canonicalizing to the base type under a type alias,
+                // but that requires also resolving stuff like `type Heh<T: Trait> = T::Assoc;` and
+                // I have no clue how I'd resolve that here. We also have to propagate that canonicalized
+                // target to the real implblock spec for the type inferer to see overlapping specs
+                return Err(Diagnostic::error(
+                    &name,
+                    "Impl on type alias is currently not supported",
+                )
+                .primary_label("Type alias as impl target")
+                .secondary_label(&sym, format!("{name} defined here")));
+            }
 
             if let TypeSymbol::GenericArg { traits: _ } | TypeSymbol::GenericMeta { .. } =
                 &sym.inner
             {
                 return Err(
-                    Diagnostic::error(name, "Impl target must be a concrete type")
+                    Diagnostic::error(&name, "Impl target must be a concrete type")
                         .primary_label("Impl on generic type")
                         .secondary_label(sym, format!("{name} defined here")),
                 );
             }
 
             Ok((
-                hir::ImplTarget::Named(target_name),
-                args.as_ref()
-                    .map(|t| t.inner.clone())
-                    .unwrap_or_default()
-                    .iter()
-                    .map(|expr| visit_type_expression(expr, &TypeSpecKind::ImplTarget, ctx))
-                    .collect::<Result<_>>()?,
+                hir::ImplTarget::Named(name.inner),
+                args.into_iter().map(|arg| arg.inner).collect(),
             ))
         }
-        spade_ast::TypeSpec::Inverted(inner) => Ok((
+        hir::TypeSpec::Generic(generic) => match generic {
+            hir::Generic::Named(name) => {
+                let sym = ctx.symtab.type_symbol_by_id(&name);
+                Err(
+                    Diagnostic::error(&name, "Impl target must be a concrete type")
+                        .primary_label("Impl on generic type")
+                        .secondary_label(sym, format!("{name} defined here")),
+                )
+            }
+            hir::Generic::Hidden(_) => unreachable!(),
+        },
+        hir::TypeSpec::Inverted(inner) => Ok((
             hir::ImplTarget::Inverted,
-            vec![visit_type_expression(
-                inner,
-                &TypeSpecKind::ImplTarget,
-                ctx,
-            )?],
+            vec![hir::TypeExpression::TypeSpec(inner.inner)],
         )),
-        spade_ast::TypeSpec::CopyView(inner) => Ok((
+        hir::TypeSpec::CopyView(inner) => Ok((
             hir::ImplTarget::CopyView,
-            vec![visit_type_expression(
-                inner,
-                &TypeSpecKind::ImplTarget,
-                ctx,
-            )?],
+            vec![hir::TypeExpression::TypeSpec(inner.inner)],
         )),
-        ast::TypeSpec::Tuple(inner) => Ok((
+        hir::TypeSpec::Tuple(inner) => Ok((
             hir::ImplTarget::Tuple,
             inner
-                .iter()
-                .map(|t| visit_type_expression(t, &TypeSpecKind::ImplTarget, ctx))
-                .collect::<Result<_>>()?,
+                .into_iter()
+                .map(|t| hir::TypeExpression::TypeSpec(t.inner))
+                .collect(),
         )),
-        ast::TypeSpec::Impl(_) => {
+        hir::TypeSpec::Wildcard(_) => {
             return Err(
-                Diagnostic::error(&block.target, "Impls target cannot be impl type")
-                    .primary_label("Impl target cannot be impl type"),
-            );
-        }
-        spade_ast::TypeSpec::Wildcard => {
-            return Err(
-                Diagnostic::error(&block.target, "Impl target cannot be wildcard")
+                Diagnostic::error(target_spec, "Impl target cannot be wildcard")
                     .primary_label("Impl target cannot be wildcard"),
             );
         }
+        hir::TypeSpec::TraitSelf(_) => unreachable!(),
     }
 }
 
