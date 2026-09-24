@@ -877,6 +877,26 @@ impl<'a> Parser<'a> {
     }
 
     #[trace_parser]
+    pub fn const_block(&mut self) -> Result<Option<Loc<Expression>>> {
+        let start = peek_for!(self, &TokenKind::Const);
+        self.eat(&TokenKind::Type)?;
+
+        let (type_expr, block_loc) = self.surrounded(
+            &TokenKind::OpenBrace,
+            |s| s.expression(ExprBraces::Allow),
+            &TokenKind::CloseBrace,
+        )?;
+
+        Ok(Some(
+            Expression::ConstTypeExpr(Box::new(type_expr)).between(
+                self.file_id(),
+                &start.span,
+                &block_loc,
+            ),
+        ))
+    }
+
+    #[trace_parser]
     #[tracing::instrument(skip(self))]
     pub fn int_literal(&mut self) -> Result<Option<Loc<IntLiteral>>> {
         let plusminus = match &self.peek()?.kind {

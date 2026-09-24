@@ -346,6 +346,7 @@ impl ServerBackend {
                             | spade_hir::ExprKind::BinaryOperator(_, _, _)
                             | spade_hir::ExprKind::UnaryOperator(_, _)
                             | spade_hir::ExprKind::Match(_, _)
+                            | spade_hir::ExprKind::ConstTypeExpr(_)
                             | spade_hir::ExprKind::Block(_)
                             | spade_hir::ExprKind::If { .. }
                             | spade_hir::ExprKind::TypeLevelIf { .. }

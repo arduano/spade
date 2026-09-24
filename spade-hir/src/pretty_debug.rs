@@ -349,6 +349,9 @@ impl PrettyDebug for ExprKind {
                     [0] "}"
                 }.to_string()
             },
+            crate::ExprKind::ConstTypeExpr(block) => {
+                format!("{{ {} }}", block.pretty_debug())
+            },
             crate::ExprKind::Block(block) => {
                 code!{
                     [0] "{";

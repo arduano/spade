@@ -95,6 +95,7 @@ impl<'a> Pass for DisallowZeroSize<'a> {
                 }
                 Ok(())
             }
+            spade_hir::ExprKind::ConstTypeExpr(_) => Ok(()),
             spade_hir::ExprKind::Block(_) => Ok(()),
             spade_hir::ExprKind::If { .. } => Ok(()),
             spade_hir::ExprKind::TypeLevelIf { .. } => {

@@ -1122,6 +1122,7 @@ impl TypeState {
             | ExprKind::TupleIndex(_, _)
             | ExprKind::FieldAccess(_, _)
             | ExprKind::TypeCast(_, _)
+            | ExprKind::ConstTypeExpr(_)
             | ExprKind::MethodCall { .. }
             | ExprKind::Call { .. }
             | ExprKind::AssociatedCall { .. }
@@ -1313,6 +1314,7 @@ impl TypeState {
             }
             ExprKind::RangeIndex { .. } => self.visit_range_index(expression, ctx, generic_list)?,
             ExprKind::Index(_, _) => self.visit_index(expression, ctx, generic_list)?,
+            ExprKind::ConstTypeExpr(_) => self.visit_const_type(expression, ctx, generic_list)?,
             ExprKind::Block(_) => self.visit_block_expr(expression, ctx, generic_list)?,
             ExprKind::If { .. } => self.visit_if(expression, ctx, generic_list)?,
             ExprKind::Match(_, _) => self.visit_match(expression, ctx, generic_list)?,

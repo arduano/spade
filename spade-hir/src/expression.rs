@@ -265,6 +265,7 @@ pub enum ExprKind {
         Box<Loc<Expression>>,
         Vec<(Loc<Pattern>, Option<Loc<Expression>>, Loc<Expression>)>,
     ),
+    ConstTypeExpr(Loc<ConstGenericWithId>),
     Block(Box<Block>),
     If {
         cond: Box<Loc<Expression>>,

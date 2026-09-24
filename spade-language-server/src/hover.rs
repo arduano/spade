@@ -352,6 +352,7 @@ impl ExprKindExt for ExprKind {
             | ExprKind::Incomplete(_, _)
             | ExprKind::TypeCast(_, _)
             | ExprKind::UnaryOperator(_, _)
+            | ExprKind::ConstTypeExpr(_)
             | ExprKind::Block(_)
             | ExprKind::PipelineRef { .. }
             | ExprKind::LambdaDef { .. }

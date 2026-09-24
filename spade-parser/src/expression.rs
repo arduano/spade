@@ -340,6 +340,8 @@ impl<'a> Parser<'a> {
             label_access
         } else if let Some(unsafe_expr) = self.unsafe_block()? {
             unsafe_expr
+        } else if let Some(const_expr) = self.const_block()? {
+            const_expr
         } else if let Some((path, is_macro, turbofish)) = self.path_with_turbofish()? {
             if is_macro {
                 let opening_token = self.peek()?;

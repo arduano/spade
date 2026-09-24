@@ -682,6 +682,61 @@ impl TypeState {
 
     #[trace_typechecker]
     #[tracing::instrument(level = "trace", skip_all)]
+    pub fn visit_const_type(
+        &mut self,
+        expression: &Loc<Expression>,
+        ctx: &Context,
+        generic_list: &GenericListToken,
+    ) -> Result<()> {
+        assuming_kind!(ExprKind::ConstTypeExpr(cg) = expression => {
+            let tid =
+                self.visit_const_generic_with_id(cg, generic_list, ConstraintSource::Const, ctx)?;
+
+            let loc = expression.loc();
+
+            let (t, is_num) = match tid.resolve(self) {
+                TypeVar::Unknown(_, _, _, MetaType::Bool) => (
+                    self.t_bool(loc, &ctx.symtab),
+                    false,
+                ),
+                TypeVar::Unknown(_, _, _, MetaType::Int) => (
+                    self.new_split_generic_int(loc, &ctx.symtab).0,
+                    true,
+                ),
+                TypeVar::Unknown(_, _, _, MetaType::Uint) => (
+                    self.new_split_generic_uint(loc, &ctx.symtab).0,
+                    true,
+                ),
+                TypeVar::Unknown(_, _, _, MetaType::Number) => (self.new_generic_number(loc, &ctx).0, true),
+                TypeVar::Unknown(_, _, _, MetaType::Str) => {
+                    return Err(Diagnostic::error(
+                        loc,
+                        "Type-level strings have no value-level equivalent",
+                    )
+                    .primary_label("Type-level string cannot be converted to a value"))
+                },
+                TypeVar::Unknown(_, _, _, MetaType::Type)
+                | TypeVar::Unknown(_, _, _, MetaType::Any)
+                | TypeVar::Known(_, _, _) => {
+                    return Err(Diagnostic::bug(loc, "Const generic returned invalid type var"));
+                }
+            };
+
+            if is_num {
+                self.add_requirement(Requirement::FitsIntLiteral {
+                    value: ConstantInt::Generic(tid),
+                    target_type: t.at_loc(&loc),
+                });
+            }
+
+            self.unify_expression_generic_error(expression, &t, &ctx)?;
+        });
+
+        Ok(())
+    }
+
+    #[trace_typechecker]
+    #[tracing::instrument(level = "trace", skip_all)]
     pub fn visit_block_expr(
         &mut self,
         expression: &Loc<Expression>,

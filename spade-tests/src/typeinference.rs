@@ -2775,3 +2775,48 @@ code_compiles! {
         }
     "
 }
+
+code_compiles! {
+    type_inference_works_for_const_type_expr,
+    "
+        fn main() -> uint<8> {
+            const type { 300 / 7 }
+        }
+    "
+}
+
+snapshot_error! {
+    const_type_expr_must_match_target_type,
+    "
+        fn main() -> bool {
+            const type { 300 / 7 }
+        }
+    "
+}
+
+snapshot_error! {
+    string_const_type_expr_are_rejected,
+    r#"
+        fn main() -> bool {
+            const type { "evil" }
+        }
+    "#
+}
+
+snapshot_error! {
+    numeric_const_type_expr_must_fit_target_type,
+    "
+        fn main() -> uint<2> {
+            const type { 300 / 7 }
+        }
+    "
+}
+
+snapshot_error! {
+    numeric_const_type_expr_must_fit_target_type_2,
+    "
+        fn main() -> uint<8> {
+            const type { -300 / 7 }
+        }
+    "
+}

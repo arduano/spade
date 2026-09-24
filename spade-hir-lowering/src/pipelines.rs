@@ -709,6 +709,7 @@ impl PipelineAvailability for Expression {
                     .collect::<Vec<_>>(),
                 ctx,
             ),
+            ExprKind::ConstTypeExpr(_) => Ok(None),
             ExprKind::Block(inner) => {
                 // NOTE: Do we want to allow delayed values inside blocks? That could lead to some
                 // strange issues like

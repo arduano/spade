@@ -445,6 +445,7 @@ pub enum Expression {
         Box<Loc<Expression>>,
     ),
     Block(Box<Block>),
+    ConstTypeExpr(Box<Loc<Expression>>),
     Unsafe(Box<Loc<Block>>),
     /// E.g. `stage(-5).x`, `stage('b).y`
     PipelineReference {
@@ -529,6 +530,7 @@ impl Expression {
             Expression::MacroCall { .. } => "macro call",
             Expression::UnaryOperator(_, _) => "unary operator",
             Expression::BinaryOperator(_, _, _) => "binary operator",
+            Expression::ConstTypeExpr(_) => "const type expression",
             Expression::Block(_) => "block",
             Expression::Unsafe(_) => "unsafe",
             Expression::PipelineReference { .. } => "pipeline reference",

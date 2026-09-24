@@ -2486,6 +2486,10 @@ fn visit_expression_result(e: &ast::Expression, ctx: &mut Context) -> Result<hir
 
             Ok(hir::ExprKind::Match(Box::new(e), b))
         }
+        ast::Expression::ConstTypeExpr(e) => {
+            let c = visit_const_generic(e, ctx)?.map(|cg| cg.with_id(ctx.idtracker.next()));
+            Ok(hir::ExprKind::ConstTypeExpr(c))
+        }
         ast::Expression::Block(block) => {
             Ok(hir::ExprKind::Block(Box::new(visit_block(block, ctx)?)))
         }
@@ -2912,6 +2916,7 @@ fn inject_verilog_attrs(
         | ExprKind::BinaryOperator(_, _, _)
         | ExprKind::UnaryOperator(_, _)
         | ExprKind::Match(_, _)
+        | ExprKind::ConstTypeExpr(_)
         | ExprKind::Block(_)
         | ExprKind::If { .. }
         | ExprKind::TypeLevelIf { .. }

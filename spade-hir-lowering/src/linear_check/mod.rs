@@ -176,6 +176,7 @@ fn visit_expression(
         | spade_hir::ExprKind::BinaryOperator(_, _, _)
         | spade_hir::ExprKind::UnaryOperator(_, _)
         | spade_hir::ExprKind::Match(_, _)
+        | spade_hir::ExprKind::ConstTypeExpr(_)
         | spade_hir::ExprKind::Block(_)
         | spade_hir::ExprKind::Call { .. }
         | spade_hir::ExprKind::If { .. }
@@ -331,6 +332,7 @@ fn visit_expression(
                 linear_state.consume_expression(expr)?;
             }
         }
+        spade_hir::ExprKind::ConstTypeExpr(_) => {}
         spade_hir::ExprKind::Block(b) => {
             for statement in &b.statements {
                 visit_statement(statement, linear_state, ctx)?;

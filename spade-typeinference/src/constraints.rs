@@ -354,6 +354,7 @@ pub fn ce_int(v: BigInt) -> ConstraintExpr {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConstraintSource {
+    Const,
     AdditionOutput,
     MultOutput,
     ArrayIndexing,
@@ -372,6 +373,7 @@ pub enum ConstraintSource {
 impl std::fmt::Display for ConstraintSource {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            ConstraintSource::Const => write!(f, "Const"),
             ConstraintSource::AdditionOutput => write!(f, "AdditionOutput"),
             ConstraintSource::MultOutput => write!(f, "MultiplicationOutput"),
             ConstraintSource::ArrayIndexing => write!(f, "ArrayIndexing"),

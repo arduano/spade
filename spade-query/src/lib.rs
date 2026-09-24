@@ -222,6 +222,7 @@ impl<'a> QueryCache {
                     self.visit_expression(expr);
                 }
             }
+            crate::ExprKind::ConstTypeExpr(_) => {}
             crate::ExprKind::Block(b) => {
                 for stmt in &b.statements {
                     self.visit_statements(&stmt)

@@ -2824,3 +2824,21 @@ snapshot_error! {
         }
     "
 }
+
+snapshot_mir! {
+    bool_const_type_expr,
+    "
+        fn test() -> bool {
+            const type { true }
+        }
+    "
+}
+
+snapshot_mir! {
+    int_const_type_expr,
+    "
+        fn test() -> int<8> {
+            const type { 7 }
+        }
+    "
+}

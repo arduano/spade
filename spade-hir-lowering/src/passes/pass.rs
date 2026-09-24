@@ -208,6 +208,7 @@ impl Passable for Loc<Expression> {
             | ExprKind::TypeLevelBool(_)
             | ExprKind::TriLiteral(_)
             | ExprKind::PipelineRef { .. }
+            | ExprKind::ConstTypeExpr(_)
             | ExprKind::StageReady
             | ExprKind::StageValid
             | ExprKind::Null

@@ -297,6 +297,7 @@ impl<T> UnificationErrorExt<T> for std::result::Result<T, UnificationError> {
                     );
 
                     let diag = match source {
+                        ConstraintSource::Const => diag,
                         ConstraintSource::AdditionOutput => diag.note(
                             "Addition creates one more output bit than the input to avoid overflow"
                                 .to_string(),
@@ -322,7 +323,7 @@ impl<T> UnificationErrorExt<T> for std::result::Result<T, UnificationError> {
                                 .to_string(),
                         ),
                         ConstraintSource::ArraySize => {
-                            diag.note("The number of array elements must  match")
+                            diag.note("The number of array elements must match")
                         }
                         ConstraintSource::RangeIndex => diag,
                         ConstraintSource::RangeIndexOutputSize => diag.note(

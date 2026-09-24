@@ -169,6 +169,7 @@ impl LocExprExt for Loc<hir::Expression> {
                 }
             }
             ExprKind::Match(_, _) => Some(self.clone()),
+            ExprKind::ConstTypeExpr(_) => None,
             ExprKind::Block(_) => Some(self.clone()),
             ExprKind::If { .. } => Some(self.clone()),
             ExprKind::TypeLevelIf { .. } => Some(self.clone()),
@@ -1169,6 +1170,7 @@ impl ExprLocal for Loc<Expression> {
             ExprKind::ArrayShorthandLiteral { .. } => Ok(None),
             ExprKind::RangeIndex { .. } => Ok(None),
             ExprKind::Index(_, _) => Ok(None),
+            ExprKind::ConstTypeExpr(_) => Ok(None),
             ExprKind::Block(block) => {
                 if let Some(result) = &block.result {
                     result.variable(ctx).map(Some)
@@ -1756,6 +1758,36 @@ impl ExprLocal for Loc<Expression> {
                         loc: Some(self.loc()),
                     })
                     .at_loc(&self),
+                    self,
+                )
+            }
+            ExprKind::ConstTypeExpr(c) => {
+                let ty =
+                    ctx.types
+                        .concrete_type_of(c, ctx.symtab.symtab(), &ctx.item_list.types)?;
+
+                let val = match ty {
+                    ConcreteType::Integer(i) => mir::ConstantValue::Int(i),
+                    ConcreteType::Bool(b) => mir::ConstantValue::Bool(b),
+                    // Those are not possible const generic expression results
+                    ConcreteType::Error
+                    | ConcreteType::Tuple(_)
+                    | ConcreteType::Struct { .. }
+                    | ConcreteType::Array { .. }
+                    | ConcreteType::Enum { .. }
+                    | ConcreteType::Single { .. }
+                    | ConcreteType::String(_)
+                    | ConcreteType::Backward(_)
+                    | ConcreteType::CopyView(_) => {
+                        return Err(Diagnostic::bug(
+                            c,
+                            "Invalid concrete type for const generic",
+                        ));
+                    }
+                };
+
+                result.push_primary(
+                    mir::Statement::Constant(self.variable(ctx)?, self_type, val).at_loc(&self),
                     self,
                 )
             }
