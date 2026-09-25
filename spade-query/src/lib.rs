@@ -487,7 +487,9 @@ impl<'a> QueryCache {
             | ConstGeneric::Ge(lhs, rhs)
             | ConstGeneric::LogicalAnd(lhs, rhs)
             | ConstGeneric::LogicalOr(lhs, rhs)
-            | ConstGeneric::LogicalXor(lhs, rhs) => {
+            | ConstGeneric::LogicalXor(lhs, rhs)
+            | ConstGeneric::LeftShift(lhs, rhs)
+            | ConstGeneric::RightShift(lhs, rhs) => {
                 self.visit_const_generic(lhs);
                 self.visit_const_generic(rhs);
             }

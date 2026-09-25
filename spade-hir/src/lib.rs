@@ -618,6 +618,8 @@ pub enum ConstGeneric {
     LogicalAnd(Box<Loc<ConstGeneric>>, Box<Loc<ConstGeneric>>),
     LogicalOr(Box<Loc<ConstGeneric>>, Box<Loc<ConstGeneric>>),
     LogicalXor(Box<Loc<ConstGeneric>>, Box<Loc<ConstGeneric>>),
+    LeftShift(Box<Loc<ConstGeneric>>, Box<Loc<ConstGeneric>>),
+    RightShift(Box<Loc<ConstGeneric>>, Box<Loc<ConstGeneric>>),
 }
 
 impl ConstGeneric {
@@ -656,6 +658,8 @@ impl std::fmt::Display for ConstGeneric {
             ConstGeneric::LogicalXor(l, r) => write!(f, "({l} ^^ {r})"),
             ConstGeneric::IntBitsFor(a) => write!(f, "int::bits_for({a})"),
             ConstGeneric::UintBitsFor(a) => write!(f, "uint::bits_for({a})"),
+            ConstGeneric::LeftShift(l, r) => write!(f, "({l} << {r})"),
+            ConstGeneric::RightShift(l, r) => write!(f, "({l} >> {r})"),
         }
     }
 }

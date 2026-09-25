@@ -1245,6 +1245,16 @@ fn map_const_generic_to_trait(
             map_boilerplate(rhs)?,
         )
         .at_loc(&cg)),
+        hir::ConstGeneric::LeftShift(lhs, rhs) => Ok(hir::ConstGeneric::LeftShift(
+            map_boilerplate(lhs)?,
+            map_boilerplate(rhs)?,
+        )
+        .at_loc(&cg)),
+        hir::ConstGeneric::RightShift(lhs, rhs) => Ok(hir::ConstGeneric::RightShift(
+            map_boilerplate(lhs)?,
+            map_boilerplate(rhs)?,
+        )
+        .at_loc(&cg)),
         hir::ConstGeneric::Bool(_) => Ok(cg.clone()),
         hir::ConstGeneric::Int(_) => Ok(cg.clone()),
         hir::ConstGeneric::Str(_) => Ok(cg.clone()),

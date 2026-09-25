@@ -16,6 +16,6 @@ error: Integer value does not fit in int<8>
 2 │     T
   │     ^ 1024 does not fit in an int<8>
   │
-  = note: int<8> fits integers in the range (-128, 127)
+  = note: int<8> fits integers in the range [-128, 127]
   = The error is in a generic unit instantiated at
     ╰ testinput:6 return_t<1024>

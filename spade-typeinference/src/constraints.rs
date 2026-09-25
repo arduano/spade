@@ -1,4 +1,4 @@
-use num::{BigInt, Signed, Zero};
+use num::{BigInt, Signed, ToPrimitive, Zero};
 use serde::{Deserialize, Serialize};
 use spade_common::{
     location_info::{Loc, WithLocation},
@@ -34,6 +34,8 @@ pub enum ConstraintExpr {
     LogicalAnd(Box<ConstraintExpr>, Box<ConstraintExpr>),
     LogicalOr(Box<ConstraintExpr>, Box<ConstraintExpr>),
     LogicalXor(Box<ConstraintExpr>, Box<ConstraintExpr>),
+    LeftShift(Box<ConstraintExpr>, Box<ConstraintExpr>),
+    RightShift(Box<ConstraintExpr>, Box<ConstraintExpr>),
     /// The number of bits required to represent the specified number. In practice
     /// inner.log2().floor()+1
     IntBitsToRepresent(Box<ConstraintExpr>),
@@ -153,6 +155,20 @@ impl ConstraintExpr {
                     rhs.debug_display(type_state)
                 )
             }
+            ConstraintExpr::LeftShift(lhs, rhs) => {
+                format!(
+                    "({} << {})",
+                    lhs.debug_display(type_state),
+                    rhs.debug_display(type_state)
+                )
+            }
+            ConstraintExpr::RightShift(lhs, rhs) => {
+                format!(
+                    "({} >> {})",
+                    lhs.debug_display(type_state),
+                    rhs.debug_display(type_state)
+                )
+            }
             ConstraintExpr::IntBitsToRepresent(c) => {
                 format!("int::bits_for({})", c.debug_display(type_state))
             }
@@ -192,6 +208,10 @@ impl ConstraintExpr {
                     _ => Ok(self.clone()),
                 }
             };
+        let shift_too_large_diag = |loc, shamt| {
+            Diagnostic::error(loc, "Shift amount too large")
+                .primary_label(format!("`{shamt}` is over `65535`"))
+        };
         match self {
             ConstraintExpr::Integer(_) => Ok(self.clone()),
             ConstraintExpr::Bool(_) => Ok(self.clone()),
@@ -309,6 +329,12 @@ impl ConstraintExpr {
             ConstraintExpr::LogicalAnd(lhs, rhs) => bool_binop(lhs, rhs, &|l, r| Ok(l && r)),
             ConstraintExpr::LogicalOr(lhs, rhs) => bool_binop(lhs, rhs, &|l, r| Ok(l || r)),
             ConstraintExpr::LogicalXor(lhs, rhs) => bool_binop(lhs, rhs, &|l, r| Ok(l != r)),
+            ConstraintExpr::LeftShift(lhs, rhs) => int_binop(lhs, rhs, &|l, r| {
+                Ok(l << r.to_u16().ok_or(shift_too_large_diag(loc, r))?)
+            }),
+            ConstraintExpr::RightShift(lhs, rhs) => int_binop(lhs, rhs, &|l, r| {
+                Ok(l >> r.to_u16().ok_or(shift_too_large_diag(loc, r))?)
+            }),
             ConstraintExpr::IntBitsToRepresent(inner) => match inner.evaluate(resolve, loc)? {
                 ConstraintExpr::Integer(val) => {
                     let bits = if val.is_negative() {
@@ -543,6 +569,8 @@ impl TypeConstraints {
                     | ConstraintExpr::LogicalAnd(_, _)
                     | ConstraintExpr::LogicalOr(_, _)
                     | ConstraintExpr::LogicalXor(_, _)
+                    | ConstraintExpr::LeftShift(_, _)
+                    | ConstraintExpr::RightShift(_, _)
                     | ConstraintExpr::Difference(_, _)
                     | ConstraintExpr::Product(_, _)
                     | ConstraintExpr::IntBitsToRepresent(_)

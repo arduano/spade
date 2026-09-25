@@ -1026,6 +1026,12 @@ pub fn visit_const_generic(
                 ast::BinaryOperator::LogicalXor => {
                     ConstGeneric::LogicalXor(Box::new(lhs), Box::new(rhs))
                 }
+                ast::BinaryOperator::LeftShift => {
+                    ConstGeneric::LeftShift(Box::new(lhs), Box::new(rhs))
+                }
+                ast::BinaryOperator::RightShift => {
+                    ConstGeneric::RightShift(Box::new(lhs), Box::new(rhs))
+                }
                 other => {
                     return Err(Diagnostic::error(
                         op,

@@ -12,4 +12,4 @@ error: Integer value does not fit in uint<2>
 2 │     const type { 300 / 7 }
   │     ^^^^^^^^^^^^^^^^^^^^^^ 42 does not fit in an uint<2>
   │
-  = note: uint<2> fits unsigned integers in the range (0, 3)
+  = note: uint<2> fits unsigned integers in the range [0, 3]

@@ -232,6 +232,12 @@ impl PrettyDebug for ConstGeneric {
             ConstGeneric::LogicalXor(lhs, rhs) => {
                 format!("({} ^^ {})", lhs.pretty_debug(), rhs.pretty_debug())
             }
+            ConstGeneric::LeftShift(lhs, rhs) => {
+                format!("({} << {})", lhs.pretty_debug(), rhs.pretty_debug())
+            }
+            ConstGeneric::RightShift(lhs, rhs) => {
+                format!("({} >> {})", lhs.pretty_debug(), rhs.pretty_debug())
+            }
         }
     }
 }

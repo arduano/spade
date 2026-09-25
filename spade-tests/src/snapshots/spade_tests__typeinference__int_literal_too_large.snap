@@ -12,4 +12,4 @@ error: Integer value does not fit in int<4>
 2 │     8
   │     ^ 8 does not fit in an int<4>
   │
-  = note: int<4> fits integers in the range (-8, 7)
+  = note: int<4> fits integers in the range [-8, 7]

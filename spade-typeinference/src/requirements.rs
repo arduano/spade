@@ -412,12 +412,12 @@ impl Requirement {
 
                                     let diagnostic = if unsigned {
                                         diagnostic.note(format!(
-                                            "{name}<{size}> fits unsigned integers in the range (0, {})",
+                                            "{name}<{size}> fits unsigned integers in the range [0, {}]",
                                             contained_range.1,
                                         ))
                                     } else {
                                         diagnostic.note(format!(
-                                            "{name}<{size}> fits integers in the range ({}, {})",
+                                            "{name}<{size}> fits integers in the range [{}, {}]",
                                             contained_range.0, contained_range.1
                                         ))
                                     };

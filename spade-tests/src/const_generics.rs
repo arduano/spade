@@ -565,3 +565,43 @@ snapshot_error! {
     }
     "
 }
+
+code_compiles! {
+    shl_works,
+    "
+        fn foo<#uint N>() -> uint<{N << 2}> {0}
+        fn test() {
+            let _: uint<20> = foo::<5>();
+        }
+    "
+}
+
+code_compiles! {
+    shr_works,
+    "
+        fn foo<#uint N>() -> uint<{N >> 2}> {0}
+        fn test() {
+            let _: uint<5> = foo::<20>();
+        }
+    "
+}
+
+snapshot_error! {
+    shl_fails_when_rhs_is_big,
+    "
+        fn foo<#uint N>() -> uint<{N << 100_000}> {0}
+        fn test() {
+            let _ = foo::<20>();
+        }
+    "
+}
+
+snapshot_error! {
+    shr_fails_when_rhs_is_big,
+    "
+        fn foo<#uint N>() -> uint<{N >> 100_000}> {0}
+        fn test() {
+            let _ = foo::<20>();
+        }
+    "
+}

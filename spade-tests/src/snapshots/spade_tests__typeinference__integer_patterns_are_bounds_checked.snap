@@ -15,4 +15,4 @@ error: Integer value does not fit in uint<8>
 3 │         512 => false,
   │         ^^^ 512 does not fit in an uint<8>
   │
-  = note: uint<8> fits unsigned integers in the range (0, 255)
+  = note: uint<8> fits unsigned integers in the range [0, 255]

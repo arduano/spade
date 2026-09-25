@@ -164,6 +164,12 @@ impl PrettyPrint for ConstGeneric {
             ConstGeneric::LogicalXor(lhs, rhs) => {
                 format!("({} ^^ {})", lhs.pretty_print(), rhs.pretty_print())
             }
+            ConstGeneric::LeftShift(lhs, rhs) => {
+                format!("({} << {})", lhs.pretty_print(), rhs.pretty_print())
+            }
+            ConstGeneric::RightShift(lhs, rhs) => {
+                format!("({} >> {})", lhs.pretty_print(), rhs.pretty_print())
+            }
         }
     }
 }
