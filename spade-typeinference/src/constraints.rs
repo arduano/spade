@@ -466,7 +466,7 @@ impl TypeConstraints {
     /// Calls `evaluate` on all constraints. If any constraints are now `T = Integer(val)`,
     /// those updated values are returned. Such constraints are then removed
     /// Returns the updated constraints, the new known values, and any diagnostic errors that
-    /// occured during evaluation.
+    /// occurred during evaluation.
     pub fn update_type_level_value_constraints(
         self,
         type_state: &TypeState,
