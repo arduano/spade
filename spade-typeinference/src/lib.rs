@@ -3405,16 +3405,19 @@ impl TypeState {
             trace!("Updating constraints");
             // NOTE: Cloning here is kind of ugly
             let new_info;
-            let diagnostics;
+            let mut diagnostics;
             (self.owned.constraints, new_info, diagnostics) = self
                 .owned
                 .constraints
                 .clone()
                 .update_type_level_value_constraints(self);
 
-            let mut diagnostics = diagnostics.into_iter();
-            if let Some(diag) = diagnostics.next() {
-                self.owned.diags.errors.extend(diagnostics);
+            // Even if we get multiple diagnostics from updating type level constraints, we can
+            // only report a <the error occurred while unifying types here> message on one of them
+            // since we don't currently support adding context to more than one error. Alternatively we could
+            // just put the diagnostic into `self.owned.errors`, but that might be more confusing than helpful
+            // without the added context.
+            if let Some(diag) = diagnostics.pop() {
                 return Err(UnificationError::Specific(diag));
             }
 
