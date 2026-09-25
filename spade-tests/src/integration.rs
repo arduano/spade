@@ -73,6 +73,19 @@ snapshot_error!(
 );
 
 snapshot_error!(
+    forbidden_impl_targets,
+    r#"
+        impl Self {
+            fn test(self) -> Self { Self {} }
+        }
+
+        impl impl Data {
+            fn test(self) -> Self { Self {} }
+        }
+    "#
+);
+
+snapshot_error!(
     trait_self_wrong_impl_return_type,
     r#"
         trait X {

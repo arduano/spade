@@ -331,12 +331,6 @@ pub fn canonicalize_impl_target(
 
             // If we impl on a type alias, we need to canonicalize it to the base type
             if let TypeSymbol::Declared(_, _, TypeDeclKind::Alias) = &sym.inner {
-                let hir::TypeDeclaration {
-                    name: _,
-                    kind: _,
-                    generic_args: _,
-                } = &ctx.item_list.types.get(&name).unwrap().inner;
-
                 // FIXME: support true matching and canonicalizing to the base type under a type alias,
                 // but that requires also resolving stuff like `type Heh<T: Trait> = T::Assoc;` and
                 // I have no clue how I'd resolve that here. We also have to propagate that canonicalized
@@ -396,7 +390,9 @@ pub fn canonicalize_impl_target(
                     .primary_label("Impl target cannot be wildcard"),
             );
         }
-        hir::TypeSpec::TraitSelf(_) => unreachable!(),
+        hir::TypeSpec::TraitSelf(_) => {
+            diag_bail!(target_spec, "Did not expect trait's `Self` as impl target")
+        }
     }
 }
 
