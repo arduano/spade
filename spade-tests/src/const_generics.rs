@@ -552,3 +552,16 @@ snapshot_error! {
     }
     "
 }
+
+snapshot_error! {
+    const_generic_in_struct_catches_errors2,
+    "
+    struct foo<#uint A> {
+        bar: uint<{1 / A}>,
+    }
+
+    fn test() {
+        let _ = foo::<0>(1);
+    }
+    "
+}

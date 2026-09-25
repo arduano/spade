@@ -129,7 +129,7 @@ impl TypeState {
                         var
                     };
                     // NOTE: Safe unwrap, depth is fresh
-                    self.unify(&depth, &var, ctx).unwrap()
+                    self.unify_without_checking_constraints(&depth, &var, ctx).unwrap()
                 },
                 spade_hir::expression::PipelineRefKind::Relative(expr) => {
                     let expr_var = self.hir_type_expr_to_var(expr, generic_list, ctx)?;
@@ -146,7 +146,7 @@ impl TypeState {
                         ConstraintSource::PipelineRegOffset{reg: expr.loc(), total: self.get_pipeline_state(expr)?.total_depth.loc()}
                     );
                     // Safe unwrap, depth is a fresh type var
-                    self.unify(&depth, &total_offset, ctx).unwrap()
+                    self.unify_without_checking_constraints(&depth, &total_offset, ctx).unwrap()
                 },
             };
 
@@ -186,7 +186,7 @@ impl TypeState {
                     if let Some(sz) = size {
                         size_var
                             .unify_with(&self.new_concrete_int(sz.clone(), expression.loc()), self)
-                            .commit(self, ctx)
+                            .commit_without_checking_constraints(self, ctx)
                             .unwrap();
                     }
                     (t, size_var)
@@ -197,7 +197,7 @@ impl TypeState {
                     if let Some(sz) = size {
                         size_var
                             .unify_with(&self.new_concrete_int(sz.clone(), expression.loc()), self)
-                            .commit(self, ctx)
+                            .commit_without_checking_constraints(self, ctx)
                             .unwrap();
                     }
                     (t, size_var)

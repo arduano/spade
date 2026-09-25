@@ -1270,7 +1270,7 @@ impl TypeState {
             ExprKind::Error => {
                 new_type
                     .unify_with(&self.t_err(expression.loc()), self)
-                    .commit(self, ctx)
+                    .commit_without_checking_constraints(self, ctx)
                     .unwrap();
             }
             ExprKind::Identifier(_) => self.visit_identifier(expression, ctx)?,
@@ -1301,7 +1301,7 @@ impl TypeState {
 
                 new_type
                     .unify_with(&self.t_err(expression.loc()), self)
-                    .commit(self, ctx)
+                    .commit_without_checking_constraints(self, ctx)
                     .unwrap();
             }
             ExprKind::FieldAccess(_, _) => {
@@ -1411,6 +1411,11 @@ impl TypeState {
             match self.visit_expression_result(expression, ctx, generic_list, new_type) {
                 Ok(_) => {}
                 Err(e) => {
+                    // NOTE: At first thought, it might seem like this unification is infallible
+                    // and that we could use `.commit_without_checking_constraints`. However,
+                    // expression unification pushes struct constraints, and those are sometimes
+                    // not caught until this unification. Therefore, we have to run normal unificaiton
+                    // to get good "error occurred when unifying types here" errors.
                     if let Err(d) = new_type
                         .unify_with(&self.t_err(expression.loc()), self)
                         .commit(self, ctx)
@@ -1742,7 +1747,8 @@ impl TypeState {
         );
 
         // NOTE: Unwrap is safe, size is still generic at this point
-        self.unify(&addr_size, &addr_size_arg, ctx).unwrap();
+        self.unify_without_checking_constraints(&addr_size, &addr_size_arg, ctx)
+            .unwrap();
         self.unify_expression_generic_error(args[1].value, &port_type, ctx)?;
 
         Ok(())
@@ -1766,7 +1772,8 @@ impl TypeState {
         );
 
         // NOTE: Unwrap is safe, size is still generic at this point
-        self.unify(&addr_size, &addr_size_arg, ctx).unwrap();
+        self.unify_without_checking_constraints(&addr_size, &addr_size_arg, ctx)
+            .unwrap();
 
         Ok(())
     }
@@ -2417,7 +2424,7 @@ impl TypeState {
                 {
                     current_stage_depth
                         .unify_with(&self.t_err(stmt.loc()), self)
-                        .commit(self, ctx)
+                        .commit_without_checking_constraints(self, ctx)
                         .unwrap();
                 }
                 Ok(())
@@ -2546,7 +2553,7 @@ impl TypeState {
                     var
                 };
                 // Safe unwrap, unifying with a fresh var
-                self.unify(
+                self.unify_without_checking_constraints(
                     &var,
                     &self.get_pipeline_state(name)?.current_stage_depth.clone(),
                     ctx,
@@ -3390,6 +3397,22 @@ impl TypeState {
         result
     }
 
+    /// Unify without checking constraints. This is intended to be used when doing "infallible"
+    /// unification, such as unifying with `t_error` or `new_generic`. Unlike `unify`, unwrapping
+    /// the result of this is safe assuming that the unification is safe.
+    ///
+    /// Since constraints are not checked, this should be used sparingly. Especially since the unification
+    /// point of the next unification with constraints is going to be the one reported for all failing
+    /// constraints.
+    pub fn unify_without_checking_constraints(
+        &mut self,
+        e1: &impl HasType,
+        e2: &impl HasType,
+        ctx: &Context,
+    ) -> std::result::Result<TypeVarID, UnificationError> {
+        self.unify_inner(e1, e2, ctx)
+    }
+
     #[tracing::instrument(level = "trace", skip_all)]
     pub fn unify(
         &mut self,
@@ -3871,6 +3894,14 @@ pub struct UnificationBuilder {
     rhs: TypeVarID,
 }
 impl UnificationBuilder {
+    /// See the documentation on `unify_without_checking_constraints` for details on when to use this
+    pub fn commit_without_checking_constraints(
+        self,
+        state: &mut TypeState,
+        ctx: &Context,
+    ) -> std::result::Result<TypeVarID, UnificationError> {
+        state.unify_without_checking_constraints(&self.lhs, &self.rhs, ctx)
+    }
     pub fn commit(
         self,
         state: &mut TypeState,
