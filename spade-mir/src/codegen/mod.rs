@@ -585,16 +585,17 @@ fn forward_expression_code(
             let initial_block = if let Some(vals) = initial {
                 let assignments = vals
                     .iter()
-                    .enumerate()
-                    .map(|(i, v)| {
+                    .map(|v| {
                         let val = eval_statements(v).as_string();
 
-                        format!("{}[{i}] = 'b{val};", name)
+                        format!("'b{val},")
                     })
                     .collect::<Vec<_>>();
                 code! {
                     [0] "initial begin";
-                    [1]     assignments;
+                    [1]     format!("{name} = '{{");
+                    [2]         assignments;
+                    [1]     "};";
                     [0] "end";
                 }
             } else {
@@ -3328,8 +3329,10 @@ mod expression_tests {
             r#"
             logic[6-1:0] _e_0[16-1:0];
             initial begin
-                _e_0[0] = 'b001010;
-                _e_0[1] = 'b000101;
+                _e_0 = '{
+                    'b001010,
+                    'b000101,
+                };
             end
             always @(posedge _e_1) begin
                 if (_e_2[10]) begin
