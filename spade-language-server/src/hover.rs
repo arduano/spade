@@ -339,6 +339,7 @@ impl ExprKindExt for ExprKind {
             | ExprKind::Match(_, _)
             | ExprKind::If { .. }
             | ExprKind::TypeLevelIf { .. }
+            | ExprKind::TypeLevelMatch { .. }
             | ExprKind::BoolLiteral(_)
             | ExprKind::TypeLevelBool(_)
             | ExprKind::TriLiteral(_)

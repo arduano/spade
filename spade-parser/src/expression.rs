@@ -330,8 +330,8 @@ impl<'a> Parser<'a> {
             block.map(Box::new).map(Expression::Block)
         } else if let Some(if_expr) = self.if_expression(false, true, false)? {
             if_expr
-        } else if let Some(if_expr) = self.type_level_if()? {
-            if_expr
+        } else if let Some(gen_expr) = self.gen_expression()? {
+            gen_expr
         } else if let Some(match_expr) = self.match_expression()? {
             match_expr
         } else if let Some(stageref) = self.pipeline_reference()? {

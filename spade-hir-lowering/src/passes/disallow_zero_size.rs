@@ -101,6 +101,12 @@ impl<'a> Pass for DisallowZeroSize<'a> {
             spade_hir::ExprKind::TypeLevelIf { .. } => {
                 diag_bail!(expression.loc(), "Type level if should have been lowered")
             }
+            spade_hir::ExprKind::TypeLevelMatch { .. } => {
+                diag_bail!(
+                    expression.loc(),
+                    "Type level match should have been lowered"
+                )
+            }
             spade_hir::ExprKind::PipelineRef { .. } => Ok(()),
             spade_hir::ExprKind::StageValid => Ok(()),
             spade_hir::ExprKind::StageReady => Ok(()),

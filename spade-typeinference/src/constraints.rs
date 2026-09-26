@@ -410,7 +410,7 @@ pub enum ConstraintSource {
     RangeIndex,
     RangeIndexOutputSize,
     ArraySize,
-    TypeLevelIf,
+    GenExpr,
     Where,
 }
 
@@ -430,7 +430,7 @@ impl std::fmt::Display for ConstraintSource {
             ConstraintSource::PipelineRegOffset { .. } => write!(f, "PipelineRegOffset"),
             ConstraintSource::PipelineRegCount { .. } => write!(f, "PipelineRegOffset"),
             ConstraintSource::PipelineAvailDepth => write!(f, "PipelineAvailDepth"),
-            ConstraintSource::TypeLevelIf => write!(f, "TypeLevelIf"),
+            ConstraintSource::GenExpr => write!(f, "GenExpr"),
         }
     }
 }

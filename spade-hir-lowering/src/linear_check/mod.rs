@@ -181,6 +181,7 @@ fn visit_expression(
         | spade_hir::ExprKind::Call { .. }
         | spade_hir::ExprKind::If { .. }
         | spade_hir::ExprKind::TypeLevelIf { .. }
+        | spade_hir::ExprKind::TypeLevelMatch { .. }
         | spade_hir::ExprKind::StageValid
         | spade_hir::ExprKind::StageReady => true,
         spade_hir::ExprKind::LambdaDef { .. } => diag_bail!(
@@ -413,6 +414,9 @@ fn visit_expression(
         }
         spade_hir::ExprKind::TypeLevelIf { .. } => {
             diag_bail!(expr, "Type level if should have been lowered")
+        }
+        spade_hir::ExprKind::TypeLevelMatch { .. } => {
+            diag_bail!(expr, "Type level match should have been lowered")
         }
         spade_hir::ExprKind::MethodCall { .. } => diag_bail!(
             expr,

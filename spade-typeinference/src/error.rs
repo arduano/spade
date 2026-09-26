@@ -329,7 +329,7 @@ impl<T> UnificationErrorExt<T> for std::result::Result<T, UnificationError> {
                         ConstraintSource::RangeIndexOutputSize => diag.note(
                             "The output of a range index is an array inferred from the indices",
                         ),
-                        ConstraintSource::TypeLevelIf | ConstraintSource::Where => diag,
+                        ConstraintSource::GenExpr | ConstraintSource::Where => diag,
                         ConstraintSource::PipelineRegOffset { .. } => diag,
                         ConstraintSource::PipelineRegCount { reg, total } => Diagnostic::error(
                             total,

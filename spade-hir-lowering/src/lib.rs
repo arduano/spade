@@ -173,6 +173,7 @@ impl LocExprExt for Loc<hir::Expression> {
             ExprKind::Block(_) => Some(self.clone()),
             ExprKind::If { .. } => Some(self.clone()),
             ExprKind::TypeLevelIf { .. } => Some(self.clone()),
+            ExprKind::TypeLevelMatch { .. } => Some(self.clone()),
             ExprKind::PipelineRef { .. } => Some(self.clone()),
             ExprKind::StageReady => Some(self.clone()),
             ExprKind::StageValid => Some(self.clone()),
@@ -1232,6 +1233,10 @@ impl ExprLocal for Loc<Expression> {
                 self,
                 "Type level if should have been lowered to function by this point"
             ),
+            ExprKind::TypeLevelMatch { .. } => diag_bail!(
+                self,
+                "Type level match should have been lowered to function by this point"
+            ),
             ExprKind::MethodCall { .. } => diag_bail!(
                 self,
                 "method call should have been lowered to function by this point"
@@ -2211,6 +2216,12 @@ impl ExprLocal for Loc<Expression> {
                 diag_bail!(
                     self,
                     "Type level if should already have been lowered at this point"
+                )
+            }
+            ExprKind::TypeLevelMatch { .. } => {
+                diag_bail!(
+                    self,
+                    "Type level match should already have been lowered at this point"
                 )
             }
             ExprKind::MethodCall { .. } => {

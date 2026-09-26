@@ -1060,7 +1060,14 @@ impl TypeState {
                 self.expression_data_constraints(&on_true, pipeline_loc, ctx)?;
                 self.expression_data_constraints(&on_false, pipeline_loc, ctx)?;
             }
-
+            ExprKind::TypeLevelMatch {
+                expression: _,
+                branches,
+            } => {
+                for (_, expr) in branches {
+                    self.expression_data_constraints(expr, pipeline_loc, ctx)?;
+                }
+            }
             ExprKind::If {
                 cond: _,
                 on_true,
@@ -1358,7 +1365,6 @@ impl TypeState {
                     .commit(self, ctx)
                     .into_default_diagnostic(expression, self)?;
             }
-
             ExprKind::TypeLevelIf {
                 cond,
                 on_true,
@@ -1367,7 +1373,7 @@ impl TypeState {
                 let cond_var = self.visit_const_generic_with_id(
                     cond,
                     generic_list,
-                    ConstraintSource::TypeLevelIf,
+                    ConstraintSource::GenExpr,
                     ctx,
                 )?;
                 let t_bool = self.new_generic_tlbool(cond.loc());
@@ -1385,6 +1391,48 @@ impl TypeState {
 
                 self.unify_expression_generic_error(expression, on_true.as_ref(), ctx)?;
                 self.unify_expression_generic_error(expression, on_false.as_ref(), ctx)?;
+            }
+            ExprKind::TypeLevelMatch {
+                expression: e,
+                branches,
+            } => {
+                let extract_meta = |s: &mut Self, c: &Loc<ConstGenericWithId>| {
+                    let var = s.visit_const_generic_with_id(
+                        c,
+                        generic_list,
+                        ConstraintSource::GenExpr,
+                        ctx,
+                    )?;
+
+                    let meta = match var.resolve(s) {
+                        TypeVar::Unknown(_, _, _, m) => m,
+                        TypeVar::Known(_, _, _) => {
+                            return Err(Diagnostic::bug(
+                                c,
+                                "Const generic resolved to known type var",
+                            ));
+                        }
+                    };
+
+                    Ok(meta)
+                };
+
+                let emeta = extract_meta(self, e)?;
+
+                for (pat, expr) in branches {
+                    if let Some(ty) = &pat.inner {
+                        let ty = ty.clone().at_loc(pat);
+                        let tmeta = extract_meta(self, &ty)?;
+
+                        let tgen = self.new_generic_with_meta(ty.loc(), tmeta);
+                        let egen = self.new_generic_with_meta(e.loc(), emeta.clone());
+                        self.unify(&tgen, &egen, ctx)
+                            .into_default_diagnostic(expression, self)?;
+                    }
+
+                    self.visit_expression(expr, ctx, generic_list);
+                    self.unify_expression_generic_error(expr, expression, ctx)?;
+                }
             }
             ExprKind::LambdaDef { .. } => {
                 self.visit_lambda_def(expression, ctx, generic_list)?;

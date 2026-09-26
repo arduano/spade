@@ -376,6 +376,17 @@ impl PrettyDebug for ExprKind {
                     [0] "}";
                 }.to_string()
             }
+            crate::ExprKind::TypeLevelMatch { expression, branches } => {
+                code!{
+                    [0] format!("gen match {} {{", expression.pretty_debug());
+                    [1]     branches.iter().map(|(pat, expr)| format!(
+                                "{} => {},",
+                                pat.pretty_debug(),
+                                expr.pretty_debug(),
+                            )).join("\n");
+                    [0] "}";
+                }.to_string()
+            }
             crate::ExprKind::PipelineRef {
                 stage: _,
                 name: _,

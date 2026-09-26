@@ -32,7 +32,7 @@ use spade_hir::{Selfness, expression::Safety, symbol_table::TypeDeclKind};
 use spade_parser::{ExprBraces, Parser};
 use spade_types::meta_types::MetaType;
 use tracing::{Level, event};
-use type_level_if::expand_type_level_if;
+use type_level_if::expand_gen_expr;
 
 use crate::attributes::AttributeListExt;
 use crate::global_symbols::{
@@ -297,7 +297,7 @@ pub enum TypeSpecKind {
     PipelineRegCount,
     PipelineInstDepth,
     TraitBound,
-    TypeLevelIf,
+    GenExpr,
     /// When calling an associated fn we strip a path line `path::to::Type::func`, and
     /// split it into `path::to::Type` and `func` where the former becomes a TypeSpec
     /// which we visit. This is the kind of that type
@@ -352,7 +352,7 @@ pub fn visit_type_expression(
                 | TypeSpecKind::Argument
                 | TypeSpecKind::OutputType
                 | TypeSpecKind::Turbofish
-                | TypeSpecKind::TypeLevelIf
+                | TypeSpecKind::GenExpr
                 | TypeSpecKind::BindingType
                 | TypeSpecKind::TypeCast
                 | TypeSpecKind::PipelineInstDepth
@@ -585,7 +585,7 @@ pub fn visit_type_spec(
                 }
                 TypeSpecKind::PipelineInstDepth
                 | TypeSpecKind::TypeCast
-                | TypeSpecKind::TypeLevelIf
+                | TypeSpecKind::GenExpr
                 | TypeSpecKind::Turbofish
                 | TypeSpecKind::BindingType => Ok(hir::TypeSpec::Wildcard(t.loc())),
             }
@@ -1434,7 +1434,7 @@ pub fn visit_unit(
     ctx.symtab.close_scope();
     ctx.current_unit = None;
 
-    Ok(hir::Item::Unit(expand_type_level_if(
+    Ok(hir::Item::Unit(expand_gen_expr(
         hir::Unit {
             name: unit_name,
             head: head.clone().inner,
@@ -2458,6 +2458,59 @@ fn visit_expression_result(e: &ast::Expression, ctx: &mut Context) -> Result<hir
                 on_false: Box::new(on_false),
             })
         }
+        ast::Expression::TypeLevelMatch {
+            expression,
+            branches,
+        } => {
+            let expression =
+                visit_const_generic(expression, ctx)?.map(|c| c.with_id(ctx.idtracker.next()));
+
+            let branches = branches
+                .iter()
+                .map(|(pat, result)| {
+                    let pat = match visit_type_expression(pat, &TypeSpecKind::GenExpr, ctx)? {
+                        hir::TypeExpression::TypeSpec(hir::TypeSpec::Wildcard(loc)) => {
+                            None.at_loc(&loc)
+                        }
+                        hir::TypeExpression::TypeSpec(_) => {
+                            return Err(Diagnostic::error(
+                                pat,
+                                "Types cannot be matched inside `gen match` blocks",
+                            ));
+                        }
+                        hir::TypeExpression::Bool(b) => {
+                            let id = ctx.idtracker.next();
+                            let c = hir::ConstGeneric::Bool(b).with_id(id);
+                            Some(c).at_loc(pat)
+                        }
+                        hir::TypeExpression::Integer(i) => {
+                            let id = ctx.idtracker.next();
+                            let c = hir::ConstGeneric::Int(i).with_id(id);
+                            Some(c).at_loc(pat)
+                        }
+                        hir::TypeExpression::String(s) => {
+                            let id = ctx.idtracker.next();
+                            let c = hir::ConstGeneric::Str(s).with_id(id);
+                            Some(c).at_loc(pat)
+                        }
+                        hir::TypeExpression::ConstGeneric(cg) => {
+                            let id = ctx.idtracker.next();
+                            let c = cg.inner.clone().with_id(id);
+                            Some(c).at_loc(pat)
+                        }
+                    };
+
+                    let result = result.visit(visit_expression, ctx);
+
+                    Ok((pat, result))
+                })
+                .collect::<Result<Vec<_>>>()?;
+
+            Ok(hir::ExprKind::TypeLevelMatch {
+                expression,
+                branches,
+            })
+        }
         ast::Expression::Match {
             expression,
             branches,
@@ -2920,6 +2973,7 @@ fn inject_verilog_attrs(
         | ExprKind::Block(_)
         | ExprKind::If { .. }
         | ExprKind::TypeLevelIf { .. }
+        | ExprKind::TypeLevelMatch { .. }
         | ExprKind::PipelineRef { .. }
         | ExprKind::LambdaDef { .. }
         | ExprKind::StageValid
