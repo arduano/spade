@@ -2044,6 +2044,42 @@ snapshot_error! {
     "
 }
 
+snapshot_error! {
+    type_level_match_must_have_matching_patterns,
+    "
+        fn test() {
+            gen match 17 {
+                15 => {},
+                false => {},
+            }
+        }
+    "
+}
+
+code_compiles! {
+    type_level_match_can_skip_fallback_if_it_returns_unit,
+    "
+        fn test() {
+            gen match 17 {
+                15 => {},
+                16 => {},
+            }
+        }
+    "
+}
+
+snapshot_error! {
+    type_level_match_must_have_fallback_if_it_returns_non_unit,
+    "
+        fn test() -> bool {
+            gen match 17 {
+                15 => true,
+                16 => false,
+            }
+        }
+    "
+}
+
 code_compiles! {
     method_unknown_type_regression,
     "
