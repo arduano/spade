@@ -1640,7 +1640,7 @@ impl<'a> Parser<'a> {
                         )
                         .between(s.file_id(), &path_span, &end_paren.span),
                     ))
-                } else if let Some(start_brace) = s.peek_and_eat(&TokenKind::Dollar)? {
+                } else if let Some(start_dollar) = s.peek_and_eat(&TokenKind::Dollar)? {
                     s.eat(&TokenKind::OpenParen)?;
                     let inner_parser = |s: &mut Self| {
                         let lhs = s.identifier()?;
@@ -1657,12 +1657,20 @@ impl<'a> Parser<'a> {
                         .extra_expected(vec![":"])?;
                     let end_brace = s.eat(&TokenKind::CloseParen)?;
 
+                    s.diags.errors.push(
+                        Diagnostic::warning(
+                            &start_dollar.loc(),
+                            "`$` syntax for named arguments is deprecated",
+                        )
+                        .primary_label("Use of deprecated named argument syntax"),
+                    );
+
                     Ok(Some(
                         Pattern::Type(
                             path,
                             ArgumentPattern::Named(inner).between(
                                 s.file_id(),
-                                &start_brace.span,
+                                &start_dollar.span,
                                 &end_brace.span,
                             ),
                         )
