@@ -893,7 +893,6 @@ pub fn stdlib_files() -> Vec<(ModuleNamespace, String, String)> {
         (["std"], ["std", "num"], "../stdlib/num.spade"),
         (["std"], ["std", "ops"], "../stdlib/ops.spade"),
         (["std"], ["std", "option"], "../stdlib/option.spade"),
-        (["std"], ["std", "ports"], "../stdlib/ports.spade"),
         (["std"], ["std", "undef"], "../stdlib/undef.spade"),
     }
 }

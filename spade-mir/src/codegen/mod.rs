@@ -772,16 +772,11 @@ fn forward_expression_code(
                 format!("{}[{}:{}]", op_names[0], upper_idx, lower_idx)
             }
         }
-        Operator::ReadPort => ops[0].backward_var_name(),
         Operator::ReadWriteItemsInOut(_) => {
             // NOTE Dummy. Set in statement_code
             String::new()
         }
         Operator::FlipPort => {
-            // NOTE Dummy. Set in statement_code
-            String::new()
-        }
-        Operator::ReadMutWires => {
             // NOTE Dummy. Set in statement_code
             String::new()
         }
@@ -887,7 +882,6 @@ fn backward_expression_code(
         | Operator::RangeIndexBits { .. }
         | Operator::IndexMemory
         | Operator::Inspect
-        | Operator::ReadPort
         | Operator::Truncate => panic!(
             "{} cannot be used on types with backward size",
             binding.operator
@@ -971,10 +965,6 @@ fn backward_expression_code(
         Operator::ConstructCopyView => String::new(),
         Operator::FlipPort => {
             // NOTE: Set in statement_code
-            String::new()
-        }
-        Operator::ReadMutWires => {
-            // NOTE Dummy. Set in statement_code
             String::new()
         }
         Operator::ReadWriteItemsInOut(_) => {
@@ -1199,14 +1189,6 @@ fn statement_code(statement: &Statement, ctx: &mut Context) -> Code {
                     code! {
                         [0] has_fwd.then(|| format!("assign {} = {};", name, back_ops[0]));
                         [0] has_back.then(|| format!("assign {} = {};", ops[0], back_name));
-                    }
-                    .to_string()
-                }
-                Operator::ReadMutWires => {
-                    // The forward ports of the flipped port (op[0]) and and the original (self)
-                    // should be mapped to the backward ports of the opposite port
-                    code! {
-                        [0] format!("assign {} = {};", name, back_ops[0]);
                     }
                     .to_string()
                 }
@@ -3518,34 +3500,6 @@ mod expression_tests {
     }
 
     #[test]
-    fn div_pow2_works() {
-        let stmt = statement!(e(0); Type::int(3); DivPow2; e(1), e(2));
-
-        let expected = indoc! {
-            r#"
-            logic[2:0] _e_0;
-            always_comb begin
-                if (_e_2 == 0) begin
-                    _e_0 = _e_1;
-                end
-                else begin
-                    _e_0 = $signed($signed(_e_1) + $signed(1 << (_e_2 - 1))) >>> $signed(_e_2);
-                end
-            end"#
-        };
-
-        assert_same_code!(
-            &statement_code_and_declaration(
-                &stmt,
-                &MirTypeList::empty(),
-                &CodeBundle::new("".to_string())
-            )
-            .to_string(),
-            expected
-        )
-    }
-
-    #[test]
     fn concat_works() {
         let stmt = statement!(e(0); Type::int(8); Concat; e(1), e(2));
 
@@ -3645,27 +3599,6 @@ mod expression_tests {
                 &MirTypeList::empty()
                     .with(ValueName::Expr(ExprID(0)), Type::backward(Type::Bool))
                     .with(ValueName::Expr(ExprID(1)), Type::Bool),
-                &CodeBundle::new("".to_string())
-            )
-            .to_string(),
-            expected
-        );
-    }
-
-    #[test]
-    fn read_mut_wire_codegen_works() {
-        let stmt = statement!(e(0); Type::int(8); ReadPort; e(1));
-
-        let expected = indoc! {
-            r#"
-            logic[7:0] _e_0;
-            assign _e_0 = _e_1_mut;"#
-        };
-
-        assert_same_code!(
-            &statement_code_and_declaration(
-                &stmt,
-                &MirTypeList::empty(),
                 &CodeBundle::new("".to_string())
             )
             .to_string(),

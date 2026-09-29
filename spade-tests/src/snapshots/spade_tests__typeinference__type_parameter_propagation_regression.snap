@@ -16,9 +16,7 @@ entity fifo_read_side<#uint W>(
 entity fifo<#uint W>(
     ram_read: ReadPort_<W>
 ) -> FifoRead<W> {
-    let read_ptr_wire = inst new_mut_wire();
-
-    let read_ptr_w = inst read_mut_wire(read_ptr_wire);
+    let (read_ptr_w, read_ptr_wire) = port();
 
     let write_ptr_w  = 0;
 
@@ -47,5 +45,5 @@ error: read_ptr_wire is unused
   │
   = note: read_ptr_wire is an inverted wire (`inv`) which must be set
   = The error is in a generic unit instantiated at
-    ╰ testinput:25 fifo_read_side<4>
-    ╰ testinput:35 fifo<4>
+    ╰ testinput:23 fifo_read_side<4>
+    ╰ testinput:33 fifo<4>

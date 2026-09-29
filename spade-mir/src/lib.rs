@@ -202,7 +202,6 @@ pub enum Operator {
     ReduceXor,
     USub,
     Not,
-    ReadPort,
     ReadWriteItemsInOut(BigUint),
     BitwiseNot,
     // Divide op[0] by 2**op[1] rounding towards 0
@@ -284,16 +283,6 @@ pub enum Operator {
     /// Inverts the direction of all bits of a port. I.e. the forward ports
     /// become backward ports. This is only valid when converting from T to ~T
     FlipPort,
-
-    /// Given a struct or tuple consisting of mut and non-mut wires, create a new
-    /// struct or tuple with the non-mut copies of the mut wires
-    ///
-    /// As an example `(&mut T1, T2, &mut T3)` becomes `(T1, T3)`
-    // NOTE: For now this variant is a bit of a hack used during wal_trace_lowering
-    // A saner implementation that also solves #252 would be nice
-    // In particular, a dedicated `ReadMutTuple` might be useful
-    // lifeguard spade#252
-    ReadMutWires,
 
     /// Instantiation of another module with the specified name. The operands are passed
     /// by name to the entity. The operand name mapping is decided by the `argument_names` field of
@@ -424,9 +413,7 @@ impl std::fmt::Display for Operator {
             Operator::Alias => write!(f, "Alias"),
             Operator::BlackBoxAlias => write!(f, "BlackBoxAlias"),
             Operator::FlipPort => write!(f, "FlipPort"),
-            Operator::ReadMutWires => write!(f, "ReadMutWires"),
             Operator::Nop => write!(f, "Nop"),
-            Operator::ReadPort => write!(f, "ReadPort"),
             Operator::ReadWriteItemsInOut(n) => write!(f, "ReadWriteInOut({})", n),
         }
     }

@@ -2348,7 +2348,7 @@ impl ExprLocal for Loc<Expression> {
 
         handle_special_functions! {
             // core
-            ["core", "conv", "transmute"] => handle_transmute {allow_port},
+            ["core", "conv", "transmute"] => handle_transmute { allow_port },
             ["core", "ops", "intrinsics", "eq"] => handle_eq,
             ["core", "ops", "intrinsics", "ne"] => handle_ne,
             ["core", "ops", "intrinsics", "bit_not"] => handle_bit_not,
@@ -2376,15 +2376,11 @@ impl ExprLocal for Loc<Expression> {
             ["std", "num", "sext"] => handle_sext,
             ["std", "num", "zext"] => handle_zext,
             ["std", "num", "concat"] => handle_concat,
-            ["std", "ops", "div_pow2"] => handle_div_pow2,
             ["std", "ops", "reduce_and"] => handle_reduce_and,
             ["std", "ops", "reduce_or"] => handle_reduce_or,
             ["std", "ops", "reduce_xor"] => handle_reduce_xor,
             ["std", "ops", "comb_div"] => handle_comb_div,
-            ["std", "ops", "comb_mod"] => handle_comb_mod,
-            ["std", "ports", "read_mut_wire"] => handle_read_mut_wire,
-            ["std", "ports", "read_write_inout"] => handle_read_write_inout,
-            ["std", "ports", "read_write_items_inout"] => handle_read_write_items_inout
+            ["std", "ops", "comb_mod"] => handle_comb_mod
         }
 
         // Look up the name in the executable list to see if this is a type instantiation
@@ -3418,35 +3414,6 @@ impl ExprLocal for Loc<Expression> {
         }
     }
 
-    fn handle_div_pow2(
-        &self,
-        _path: &Loc<NameID>,
-        result: StatementList,
-        args: &[Argument<Expression, TypeSpec>],
-        ctx: &mut Context,
-    ) -> Result<StatementList> {
-        let mut result = result;
-
-        let self_type = ctx
-            .types
-            .concrete_type_of(self, ctx.symtab.symtab(), &ctx.item_list.types)?
-            .to_mir_type();
-
-        result.push_primary(
-            mir::Statement::Binding(mir::Binding {
-                name: self.variable(ctx)?,
-                operator: mir::Operator::DivPow2,
-                operands: vec![args[0].value.variable(ctx)?, args[1].value.variable(ctx)?],
-                ty: self_type,
-                loc: Some(self.loc()),
-            })
-            .at_loc(&self),
-            self,
-        );
-
-        Ok(result)
-    }
-
     fn handle_reduce_and(
         &self,
         _path: &Loc<NameID>,
@@ -3606,37 +3573,6 @@ impl ExprLocal for Loc<Expression> {
                 operands: vec![args[0].value.variable(ctx)?, args[1].value.variable(ctx)?],
                 ty: self_type,
                 loc: Some(self.loc()),
-            })
-            .at_loc(&self),
-            self,
-        );
-
-        Ok(result)
-    }
-
-    fn handle_read_mut_wire(
-        &self,
-        path: &Loc<NameID>,
-        result: StatementList,
-        args: &[Argument<Expression, TypeSpec>],
-        ctx: &mut Context,
-    ) -> Result<StatementList> {
-        let mut result = result;
-
-        assert_eq!(args.len(), 1);
-
-        let self_type = ctx
-            .types
-            .concrete_type_of(self, ctx.symtab.symtab(), &ctx.item_list.types)?
-            .to_mir_type();
-
-        result.push_primary(
-            mir::Statement::Binding(mir::Binding {
-                name: self.variable(ctx)?,
-                operator: mir::Operator::ReadPort,
-                operands: vec![args[0].value.variable(ctx)?],
-                ty: self_type,
-                loc: Some(path.loc()),
             })
             .at_loc(&self),
             self,

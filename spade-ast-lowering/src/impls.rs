@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 use itertools::{EitherOrBoth, Itertools};
@@ -528,7 +530,7 @@ pub fn create_trait_from_unit_heads_inner(
     let mut visited_edges = subtraits
         .iter()
         .map(|s| (s.name.clone(), name.clone().at_loc(s)))
-        .collect::<HashMap<_, _>>();
+        .collect::<BTreeMap<_, _>>();
 
     while let Some(pending_name) = pending_names.extract_if(|_| true).next() {
         if pending_name == name {

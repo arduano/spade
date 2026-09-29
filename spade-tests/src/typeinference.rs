@@ -519,54 +519,6 @@ snapshot_error! {
     "
 }
 
-#[test]
-fn destructuring_a_read_mut_wire_gives_real_values() {
-    let code = "
-    struct A {
-        x: bool,
-        y: int<3>
-    }
-
-    struct HasA {
-        inner: inv A
-    }
-
-    extern fn takes_normal(x: bool, y: int<3>) -> bool;
-
-    extern entity consumer(x: HasA) -> bool;
-
-    entity uut(val: HasA) -> bool {
-        let A { x, y } = inst std::ports::read_mut_wire(val.inner);
-        let _ = inst consumer(val);
-        takes_normal(x, y)
-    }
-    ";
-
-    build_items_with_stdlib(code);
-}
-
-snapshot_error! {
-    reading_from_tuple_members_is_an_error,
-    "
-    extern fn takes_normal(x: bool, y: int<3>) -> bool;
-
-    entity uut(val: inv (bool, int<3>)) -> bool {
-        let x = inst read_mut_wire(val.0);
-        let y = inst read_mut_wire(val.1);
-        takes_normal(x, y)
-    }
-    "
-}
-
-snapshot_error! {
-    dereference_requires_target_type,
-    "
-    entity x(a: bool) -> int<8> {
-        a
-    }
-    "
-}
-
 snapshot_error! {
     type_error_on_registers_are_useful,
     "
@@ -1421,9 +1373,7 @@ snapshot_error! {
         entity fifo<#uint W>(
             ram_read: ReadPort_<W>
         ) -> FifoRead<W> {
-            let read_ptr_wire = inst new_mut_wire();
-
-            let read_ptr_w = inst read_mut_wire(read_ptr_wire);
+            let (read_ptr_w, read_ptr_wire) = port();
 
             let write_ptr_w  = 0;
 
