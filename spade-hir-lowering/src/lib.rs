@@ -1551,7 +1551,7 @@ impl ExprLocal for Loc<Expression> {
                     hir::expression::UnaryOperator::Not => unop_builder(Not)?,
                     hir::expression::UnaryOperator::BitwiseNot => unop_builder(BitwiseNot)?,
                     // Dereferences do nothing for codegen of the actual operator. It only
-                    // prevents pipelining, hence Alias is fine here
+                    // strips copy views, hence Alias is fine here
                     hir::expression::UnaryOperator::Dereference => unop_builder(Alias)?,
                     hir::expression::UnaryOperator::Reference => unop_builder(ConstructCopyView)?,
                 };
