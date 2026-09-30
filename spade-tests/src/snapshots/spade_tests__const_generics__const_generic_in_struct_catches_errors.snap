@@ -1,6 +1,5 @@
 ---
 source: spade-tests/src/const_generics.rs
-assertion_line: 543
 ---
 struct foo<#uint A> {
     bar: uint<{A / 0}>,

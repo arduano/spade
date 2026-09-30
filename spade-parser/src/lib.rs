@@ -794,24 +794,55 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // FIXME: Before changing this, merge it with if_expression
-    pub fn type_level_if(&mut self) -> Result<Option<Loc<Expression>>> {
+    pub fn gen_expression(&mut self) -> Result<Option<Loc<Expression>>> {
         let start = peek_for!(self, &TokenKind::Gen);
 
-        let Some(inner) = self.if_expression(true, false, true)? else {
-            return Err(
-                Diagnostic::error(self.peek()?, "gen must be followed by if")
-                    .primary_label("Expected if")
-                    .secondary_label(start, "Because of this gen"),
-            );
-        };
+        if let Some(if_expr) = self.if_expression(true, false, true)? {
+            let end_loc = if_expr.loc();
 
-        let end_loc = inner.loc();
-        Ok(Some(inner.inner.between(
-            self.file_id(),
-            &start.span,
-            &end_loc,
-        )))
+            Ok(Some(if_expr.inner.between(
+                self.file_id(),
+                &start.span,
+                &end_loc,
+            )))
+        } else if let Some(_) = self.peek_and_eat(&TokenKind::Match)? {
+            let expr = self.expression(ExprBraces::Forbid)?;
+
+            let (branches, body_loc) = self.surrounded(
+                &TokenKind::OpenBrace,
+                |s| {
+                    s.comma_separated(
+                        |s| {
+                            let pattern = s.type_expression()?;
+
+                            s.eat(&TokenKind::FatArrow)?;
+
+                            let value = s.expression(ExprBraces::Allow)?;
+
+                            Ok((pattern, value))
+                        },
+                        &TokenKind::CloseBrace,
+                    )
+                    .no_context()
+                },
+                &TokenKind::CloseBrace,
+            )?;
+
+            let branches = branches.at_loc(&body_loc);
+
+            Ok(Some(
+                Expression::TypeLevelMatch {
+                    expression: Box::new(expr),
+                    branches,
+                }
+                .between(self.file_id(), &start.span, &body_loc),
+            ))
+        } else {
+            Err(Diagnostic::from(UnexpectedToken {
+                got: self.peek()?,
+                expected: vec!["`if`", "`match`"],
+            }))
+        }
     }
 
     #[trace_parser]
@@ -1447,7 +1478,7 @@ impl<'a> Parser<'a> {
             let generics = if self.peek_kind(&TokenKind::Lt)? {
                 let generic_start = self.eat_unconditional()?;
                 let type_exprs = self
-                    .comma_separated(Self::type_expression, &TokenKind::Gt)
+                    .comma_separated(|s| s.type_expression(), &TokenKind::Gt)
                     .extra_expected(vec!["type expression"])?;
                 let generic_end = self.eat(&TokenKind::Gt)?;
                 Some(type_exprs.between(self.file_id(), &generic_start.span, &generic_end.span))
@@ -1473,7 +1504,7 @@ impl<'a> Parser<'a> {
         }
 
         let inner = self
-            .comma_separated(Self::type_expression, &TokenKind::CloseParen)
+            .comma_separated(|s| s.type_expression(), &TokenKind::CloseParen)
             .no_context()?;
         let end = self.eat(&TokenKind::CloseParen)?;
 
@@ -1609,7 +1640,7 @@ impl<'a> Parser<'a> {
                         )
                         .between(s.file_id(), &path_span, &end_paren.span),
                     ))
-                } else if let Some(start_brace) = s.peek_and_eat(&TokenKind::Dollar)? {
+                } else if let Some(start_dollar) = s.peek_and_eat(&TokenKind::Dollar)? {
                     s.eat(&TokenKind::OpenParen)?;
                     let inner_parser = |s: &mut Self| {
                         let lhs = s.identifier()?;
@@ -1626,12 +1657,20 @@ impl<'a> Parser<'a> {
                         .extra_expected(vec![":"])?;
                     let end_brace = s.eat(&TokenKind::CloseParen)?;
 
+                    s.diags.errors.push(
+                        Diagnostic::warning(
+                            &start_dollar.loc(),
+                            "`$` syntax for named arguments is deprecated",
+                        )
+                        .primary_label("Use of deprecated named argument syntax"),
+                    );
+
                     Ok(Some(
                         Pattern::Type(
                             path,
                             ArgumentPattern::Named(inner).between(
                                 s.file_id(),
-                                &start_brace.span,
+                                &start_dollar.span,
                                 &end_brace.span,
                             ),
                         )
@@ -1982,7 +2021,7 @@ impl<'a> Parser<'a> {
             let (params, loc) = self.surrounded(
                 &TokenKind::Lt,
                 |s| {
-                    s.comma_separated(Self::type_expression, &TokenKind::Gt)
+                    s.comma_separated(|s| s.type_expression(), &TokenKind::Gt)
                         .extra_expected(vec!["type spec"])
                 },
                 &TokenKind::Gt,

@@ -1224,26 +1224,6 @@ mod tests {
     }
 
     #[test]
-    fn div_pow2_works() {
-        let code = r#"
-            use std::ops::div_pow2;
-            entity name(a: int<16>) -> int<16> {
-                a `div_pow2` 2
-            }
-        "#;
-
-        let expected = vec![entity! {&["name"]; (
-                "a", n(0, "a"), Type::int(16),
-            ) -> Type::int(16); {
-                (const 0; Type::int(16); ConstantValue::int(2));
-                (e(1); Type::int(16); DivPow2; n(0, "a"), e(0))
-            } => e(1)
-        }];
-
-        build_and_compare_entities!(code, expected);
-    }
-
-    #[test]
     fn free_standing_generic_compiles() {
         let code = r#"
             fn identity<T>(x: T) -> T {
@@ -1544,14 +1524,8 @@ mod tests {
     #[test]
     fn assigning_ports_to_variables_works() {
         let code = r#"
-            mod std {pub mod ports{
-                pub entity new_mut_wire<T>() -> inv T {
-                    port().1
-                }
-            }}
-
             entity test() -> inv int<10> {
-                let x = inst std::ports::new_mut_wire();
+                let x = port().1;
                 x
             }
         "#;

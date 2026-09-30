@@ -775,6 +775,10 @@ impl PipelineAvailability for Expression {
                 cond,
                 "Type level if should already have been lowered by this point"
             ),
+            ExprKind::TypeLevelMatch { expression, .. } => diag_bail!(
+                expression,
+                "Type level match should already have been lowered by this point"
+            ),
             ExprKind::MethodCall { name, .. } => diag_bail!(
                 name,
                 "Method call should already have been lowered by this point"

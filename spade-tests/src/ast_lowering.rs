@@ -2708,3 +2708,15 @@ snapshot_error! {
     }
     "#
 }
+
+snapshot_error! {
+    type_level_match_cannot_match_types,
+    r#"
+    fn test<T>() {
+        gen match T {
+            uint<_> => {},
+            bool => {},
+        }
+    }
+    "#
+}

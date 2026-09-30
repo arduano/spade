@@ -278,6 +278,10 @@ pub enum ExprKind {
         on_true: Box<Loc<Expression>>,
         on_false: Box<Loc<Expression>>,
     },
+    TypeLevelMatch {
+        expression: Loc<ConstGenericWithId>,
+        branches: Vec<(Loc<Option<ConstGenericWithId>>, Loc<Expression>)>,
+    },
     PipelineRef {
         stage: Loc<PipelineRefKind>,
         name: Loc<NameID>,

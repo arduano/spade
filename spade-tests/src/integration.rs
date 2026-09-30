@@ -1,6 +1,91 @@
 use crate::{build_items, code_compiles, snapshot_error, snapshot_mir};
 
 snapshot_error!(
+    type_alias_impl_target_generic_both,
+    r#"
+        struct A<#bool B> {}
+
+        type B<#bool B> = A<B>;
+
+        impl B<true> { }
+    "#
+);
+
+snapshot_error!(
+    type_alias_impl_target_generic_target,
+    r#"
+        struct A {}
+
+        type B = A;
+
+        impl B<true> { }
+    "#
+);
+
+snapshot_error!(
+    type_alias_impl_target_generic_spec,
+    r#"
+        struct A<#bool B> {}
+
+        type B<#bool B> = A<B>;
+
+        impl B { }
+    "#
+);
+
+snapshot_error!(
+    basic_type_alias_impl_target,
+    r#"
+        struct A {}
+
+        type B = A;
+
+        impl B {
+            fn test(self) -> (Self, Self) { (A {}, B {}) }
+        }
+
+        entity main(a: A, b: B) {
+            let _: (B, A) = a.test();
+            let _: (A, B) = b.test();
+        }
+    "#
+);
+
+snapshot_error!(
+    nested_type_alias_impl_target,
+    r#"
+        struct A {}
+
+        type B = A;
+
+        type C = B;
+
+        type D = C;
+
+        impl C {
+            fn test(self) -> Self { D {} }
+        }
+
+        entity main(a: A) {
+            let _: B = a.test();
+        }
+    "#
+);
+
+snapshot_error!(
+    forbidden_impl_targets,
+    r#"
+        impl Self {
+            fn test(self) -> Self { Self {} }
+        }
+
+        impl impl Data {
+            fn test(self) -> Self { Self {} }
+        }
+    "#
+);
+
+snapshot_error!(
     trait_self_wrong_impl_return_type,
     r#"
         trait X {

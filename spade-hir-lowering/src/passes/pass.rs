@@ -200,6 +200,14 @@ impl Passable for Loc<Expression> {
                 on_true,
                 on_false,
             } => subnodes!(on_true, on_false),
+            ExprKind::TypeLevelMatch {
+                expression: _,
+                branches,
+            } => {
+                for (_, expr) in branches {
+                    expr.apply(pass)?;
+                }
+            }
             ExprKind::Error
             | ExprKind::Identifier(_)
             | ExprKind::IntLiteral(_, _)

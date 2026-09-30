@@ -1,6 +1,4 @@
 use std::mem::fifo;
-use std::ports::read_mut_wire;
-use std::ports::new_mut_wire;
 
 struct FifoTestHarnessOut {
     w_full: bool,

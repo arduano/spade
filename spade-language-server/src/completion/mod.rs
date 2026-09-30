@@ -350,6 +350,7 @@ impl ServerBackend {
                             | spade_hir::ExprKind::Block(_)
                             | spade_hir::ExprKind::If { .. }
                             | spade_hir::ExprKind::TypeLevelIf { .. }
+                            | spade_hir::ExprKind::TypeLevelMatch { .. }
                             | spade_hir::ExprKind::PipelineRef { .. }
                             | spade_hir::ExprKind::LambdaDef { .. }
                             | spade_hir::ExprKind::StageValid

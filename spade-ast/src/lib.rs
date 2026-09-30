@@ -433,6 +433,10 @@ pub enum Expression {
         on_true: Box<Loc<Expression>>,
         on_false: Box<Loc<Expression>>,
     },
+    TypeLevelMatch {
+        expression: Box<Loc<Expression>>,
+        branches: Loc<Vec<(Loc<TypeExpression>, Loc<Expression>)>>,
+    },
     Match {
         expression: Box<Loc<Expression>>,
         branches: Loc<Vec<(Loc<Pattern>, Option<Loc<Expression>>, Loc<Expression>)>>,
@@ -521,7 +525,8 @@ impl Expression {
             Expression::Incomplete { .. } => "incomplete",
             Expression::TypeCast(_, _) => "type cast",
             Expression::If { .. } => "if",
-            Expression::TypeLevelIf { .. } => "type level if",
+            Expression::TypeLevelIf { .. } => "type-level if",
+            Expression::TypeLevelMatch { .. } => "type-level match",
             Expression::Match { if_let: false, .. } => "match",
             Expression::Match { if_let: true, .. } => "if let",
             Expression::Lambda { .. } => "lambda",

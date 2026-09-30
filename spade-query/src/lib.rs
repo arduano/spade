@@ -249,6 +249,14 @@ impl<'a> QueryCache {
                 self.visit_expression(on_true);
                 self.visit_expression(on_false);
             }
+            crate::ExprKind::TypeLevelMatch {
+                expression: _,
+                branches,
+            } => {
+                for (_ty, expr) in branches {
+                    self.visit_expression(expr);
+                }
+            }
             crate::ExprKind::PipelineRef {
                 stage: _,
                 name: _,
