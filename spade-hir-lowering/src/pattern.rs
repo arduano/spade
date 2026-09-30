@@ -27,11 +27,12 @@ use crate::{Context, MirLowerable};
 fn split_int_range(
     min: BigInt,
     max: BigInt,
-    other_ctors: impl Iterator<Item = Constructor> + Clone,
+    other_ctors: impl IntoIterator<Item = impl std::borrow::Borrow<Constructor>>,
 ) -> Vec<Constructor> {
     let mut edges = other_ctors
+        .into_iter()
         .flat_map(|other| {
-            let (min, max) = other.as_range();
+            let (min, max) = other.borrow().as_range();
             [min, max]
         })
         .collect::<Vec<_>>();
@@ -44,7 +45,7 @@ fn split_int_range(
     for edge in edges.into_iter().filter(|e| e > &min && e < &max) {
         result.push(Constructor::IntRange {
             min: current_low,
-            max: &edge - 1u32.to_bigint(),
+            max: edge.clone(),
         });
         current_low = edge;
     }
@@ -89,7 +90,7 @@ pub(crate) fn split_wildcard(
                     }]
                 } else {
                     let min = -(1.to_bigint() << (bits - 1));
-                    let max = (1.to_bigint() << (bits - 1)) - 1;
+                    let max = 1.to_bigint() << (bits - 1);
                     split_int_range(
                         min,
                         max,
@@ -115,7 +116,7 @@ pub(crate) fn split_wildcard(
                     }]
                 } else {
                     let min = 0.to_bigint();
-                    let max = (1.to_bigint() << (bits)) - 1;
+                    let max = 1.to_bigint() << (bits);
                     split_int_range(
                         min,
                         max,
@@ -181,7 +182,7 @@ pub fn group_missing_constructors(
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Constructor {
     /// Patterns that only have a single constructor, like tuples and struct patterns
     Single,
@@ -191,6 +192,7 @@ pub enum Constructor {
     Bool(bool),
     /// Enum variant constructor
     Variant(usize),
+    /// Exclusive range (min..max)
     IntRange {
         min: BigInt,
         max: BigInt,
@@ -216,6 +218,44 @@ impl Constructor {
             Self::IntRange { min, max } => split_int_range(min.clone(), max.clone(), other_ctors),
             _ => vec![self.clone()],
         }
+    }
+
+    fn union(mut ctors: Vec<Constructor>) -> Vec<Constructor> {
+        ctors.sort_by(|ctor_a, ctor_b| {
+            let min_a = match ctor_a {
+                Constructor::IntRange { min, .. } => min,
+                _ => unimplemented!(),
+            };
+            let min_b = match ctor_b {
+                Constructor::IntRange { min, .. } => min,
+                _ => unimplemented!(),
+            };
+            min_a.cmp(min_b)
+        });
+        let mut ctors_drain = ctors.drain(..);
+
+        let mut out_ctors = match ctors_drain.next() {
+            Some(ctor) => vec![ctor],
+            None => return vec![],
+        };
+
+        for ctor in ctors_drain {
+            let Constructor::IntRange { max: prev_max, .. } = out_ctors.last_mut().unwrap() else {
+                unreachable!()
+            };
+            let Constructor::IntRange { min, max } = ctor else {
+                unreachable!()
+            };
+            if min <= *prev_max {
+                // Ranges overlap, we can merge them
+                *prev_max = max;
+            } else {
+                // No overlap, add it to the list
+                out_ctors.push(Constructor::IntRange { min, max });
+            }
+        }
+
+        out_ctors
     }
 
     /// Returns true if self is covered by other
@@ -465,6 +505,85 @@ impl std::fmt::Display for DeconstructedPattern {
                 unreachable!("Missing should have been removed by Usefulness::apply_constructor")
             }
             Constructor::Wildcard => write!(f, "_"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::pattern::{Constructor, split_int_range};
+    use num::BigInt;
+    use std::ops::Range;
+
+    #[test]
+    fn split_int_range_invariants() {
+        let main_range = (BigInt::from(0), BigInt::from(10));
+        let test_cases: [&[Range<i32>]; _] = [
+            // Single range fully inside main_range
+            &[3..5],
+            // Subranges do not lie fully in main range
+            &[-2..3, 8..20],
+            // Overlapping subranges
+            &[1..3, 2..5],
+            // Single element subrange
+            &[1..2],
+            // Just go bonkers with it yk
+            &[-2..20, -1..5, 2..3, 0..10],
+        ];
+
+        for test_case in test_cases {
+            let subranges = test_case
+                .into_iter()
+                .map(|range| Constructor::IntRange {
+                    min: range.start.into(),
+                    max: range.end.into(),
+                })
+                .collect::<Vec<_>>();
+            eprintln!("Splitting main range {main_range:?} with subranges {subranges:?}");
+            let split_ranges =
+                split_int_range(main_range.0.clone(), main_range.1.clone(), subranges.iter());
+
+            // Requirement 1: union of all split ranges is exactly the main range
+            assert_eq!(
+                Constructor::union(split_ranges.clone()),
+                vec![Constructor::IntRange {
+                    min: main_range.0.clone(),
+                    max: main_range.1.clone()
+                }]
+            );
+
+            // Requirement 2: a split range is either entirely inside or entirely
+            // outside a given input subrange
+            for split in split_ranges {
+                let Constructor::IntRange {
+                    min: split_min,
+                    max: split_max,
+                } = split.clone()
+                else {
+                    unreachable!()
+                };
+                for input_subrange in subranges.iter() {
+                    let Constructor::IntRange {
+                        min: input_min,
+                        max: input_max,
+                    } = input_subrange.clone()
+                    else {
+                        unreachable!()
+                    };
+
+                    if split_min < input_min && split_max <= input_min {
+                        eprintln!("Split subrange {split:?} is entirely before {input_subrange:?}");
+                    } else if split_min >= input_min && split_max <= input_max {
+                        eprintln!("Split subrange {split:?} is entirely inside {input_subrange:?}");
+                    } else if split_min >= input_max && split_max >= input_max {
+                        eprintln!("Split subrange {split:?} is entirely after {input_subrange:?}");
+                    } else {
+                        panic!(
+                            "Split range {split:?} must be either fully inside or fully outside input subrange {input_subrange:?}"
+                        );
+                    }
+                }
+            }
         }
     }
 }
