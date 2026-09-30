@@ -84,7 +84,10 @@ pub(crate) fn split_wildcard(
                 };
 
                 if bits == 0 {
-                    vec![Constructor::IntRange { first: BigInt::ZERO, last: BigInt::ZERO }]
+                    vec![Constructor::IntRange {
+                        first: BigInt::ZERO,
+                        last: BigInt::ZERO,
+                    }]
                 } else {
                     let first = -(1.to_bigint() << (bits - 1));
                     let last = (1.to_bigint() << (bits - 1)) - 1;
@@ -107,7 +110,10 @@ pub(crate) fn split_wildcard(
                 };
 
                 if bits == 0 {
-                    vec![Constructor::IntRange { first: BigInt::ZERO, last: BigInt::ZERO }]
+                    vec![Constructor::IntRange {
+                        first: BigInt::ZERO,
+                        last: BigInt::ZERO,
+                    }]
                 } else {
                     let first = 0.to_bigint();
                     let last = (1.to_bigint() << (bits)) - 1;
