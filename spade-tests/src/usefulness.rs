@@ -316,4 +316,22 @@ mod tests {
         }
         "
     }
+
+    snapshot_error! {
+        dont_ignore_single_gaps,
+        "
+        fn foo(a: uint<3>) -> bool {
+          match a {
+            0 => true,
+            // 1 => true,
+            2 => true,
+            3 => true,
+            // 4 => true,
+            5 => true,
+            6 => true,
+            // 7 => true,
+          }
+        }
+        "
+    }
 }
