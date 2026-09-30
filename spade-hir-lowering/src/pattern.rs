@@ -193,6 +193,7 @@ pub enum Constructor {
     /// Enum variant constructor
     Variant(usize),
     /// Exclusive range (min..max)
+    /// TODO: make this inclusive
     IntRange {
         min: BigInt,
         max: BigInt,
@@ -500,7 +501,14 @@ impl std::fmt::Display for DeconstructedPattern {
                 _ => unreachable!(),
             },
             Constructor::Bool(val) => write!(f, "{val}"),
-            Constructor::IntRange { min, max } => write!(f, "{min}..{max}"),
+            Constructor::IntRange { min, max } => {
+                assert!(min < max);
+                if min == &(max - BigInt::ONE) {
+                    write!(f, "{min}")
+                } else {
+                    write!(f, "{min}..{max}")
+                }
+            },
             Constructor::Missing { .. } => {
                 unreachable!("Missing should have been removed by Usefulness::apply_constructor")
             }
