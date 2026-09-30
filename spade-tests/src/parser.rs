@@ -1170,3 +1170,28 @@ snapshot_error! {
         }
     "
 }
+
+snapshot_error! {
+    parser_error_for_bodiless_fn,
+    "
+        struct A { }
+        impl A {
+          fn test(self);
+        }
+
+        fn top(a: A) {
+          a.test();
+        }
+    "
+}
+
+snapshot_error! {
+    parser_error_for_bodiful_extern_fn,
+    "
+        extern fn test() {}
+
+        fn top() {
+          test();
+        }
+    "
+}
