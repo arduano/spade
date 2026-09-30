@@ -334,4 +334,15 @@ mod tests {
         }
         "
     }
+
+    #[test]
+    fn zst_matching() {
+        let code = "
+        fn test(input: uint<0>) -> bool {
+            match input { 0 => true }
+        }
+        ";
+
+        build_items(code);
+    }
 }

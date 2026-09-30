@@ -84,7 +84,7 @@ pub(crate) fn split_wildcard(
                 };
 
                 if bits == 0 {
-                    vec![Constructor::invalid_range()]
+                    vec![Constructor::IntRange { first: BigInt::ZERO, last: BigInt::ZERO }]
                 } else {
                     let first = -(1.to_bigint() << (bits - 1));
                     let last = (1.to_bigint() << (bits - 1)) - 1;
@@ -107,7 +107,7 @@ pub(crate) fn split_wildcard(
                 };
 
                 if bits == 0 {
-                    vec![Constructor::invalid_range()]
+                    vec![Constructor::IntRange { first: BigInt::ZERO, last: BigInt::ZERO }]
                 } else {
                     let first = 0.to_bigint();
                     let last = (1.to_bigint() << (bits)) - 1;
@@ -213,13 +213,6 @@ impl Constructor {
                 split_int_range(first.clone(), last.clone(), other_ctors)
             }
             _ => vec![self.clone()],
-        }
-    }
-
-    pub fn invalid_range() -> Self {
-        Self::IntRange {
-            first: BigInt::ZERO,
-            last: BigInt::NEG_ONE,
         }
     }
 
