@@ -534,7 +534,7 @@ mod tests {
     #[test]
     fn split_int_range_invariants() {
         let main_range = (BigInt::from(0), BigInt::from(10));
-        let test_cases: [&[RangeInclusive<i32>]; _] = [
+        let test_cases: &[&[RangeInclusive<i32>]] = &[
             // Single range fully inside main_range
             &[3..=5],
             // Subranges do not lie fully in main range
