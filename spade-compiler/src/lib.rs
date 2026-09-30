@@ -885,6 +885,7 @@ pub fn stdlib_files() -> Vec<(ModuleNamespace, String, String)> {
 
         (["std"], ["std"], "../stdlib/main.spade"),
         (["std"], ["std", "array"], "../stdlib/array.spade"),
+        (["std"], ["std", "bool"], "../stdlib/bool.spade"),
         (["std"], ["std", "cdc"], "../stdlib/cdc.spade"),
         (["std"], ["std", "conv"], "../stdlib/conv.spade"),
         (["std"], ["std", "default"], "../stdlib/default.spade"),
