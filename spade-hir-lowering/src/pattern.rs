@@ -209,7 +209,9 @@ impl Constructor {
     ) -> Vec<Self> {
         match self {
             Self::Wildcard => split_wildcard(ty, other_ctors),
-            Self::IntRange { first, last } => split_int_range(first.clone(), last.clone(), other_ctors),
+            Self::IntRange { first, last } => {
+                split_int_range(first.clone(), last.clone(), other_ctors)
+            }
             _ => vec![self.clone()],
         }
     }
@@ -243,7 +245,10 @@ impl Constructor {
 
         for ctor in ctors_drain {
             let prev_ctor = out_ctors.last_mut().unwrap();
-            let Constructor::IntRange { last: prev_last, .. } = prev_ctor else {
+            let Constructor::IntRange {
+                last: prev_last, ..
+            } = prev_ctor
+            else {
                 unreachable!()
             };
             let Constructor::IntRange { first, last } = ctor else {
@@ -523,8 +528,8 @@ impl std::fmt::Display for DeconstructedPattern {
 mod tests {
     use crate::pattern::{Constructor, split_int_range};
     use num::BigInt;
-    use std::ops::RangeInclusive;
     use spade_common::num_ext::InfallibleToBigInt;
+    use std::ops::RangeInclusive;
 
     #[test]
     fn split_int_range_invariants() {
