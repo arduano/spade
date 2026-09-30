@@ -2806,3 +2806,12 @@ snapshot_error! {
         }
     "
 }
+
+snapshot_error! {
+    int_literal_too_large,
+    "
+        fn main() -> int<4> {
+            8
+        }
+    "
+}
