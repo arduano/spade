@@ -161,6 +161,7 @@ jobs:
       - name: trigger-playground-rebuild
         if: ${{ forgejo.event_name == 'push' && forgejo.ref_name == 'main' }}
         run: |
+          apk add curl
           curl -X 'POST' \
             'https://codeberg.org/api/v1/repos/spade-lang/playground/actions/workflows/publish.yml/dispatches' \
             -H 'accept: application/json' \
