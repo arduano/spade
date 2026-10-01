@@ -164,7 +164,7 @@ jobs:
           curl -X 'POST' \
             'https://codeberg.org/api/v1/repos/spade-lang/playground/actions/workflows/publish.yml/dispatches' \
             -H 'accept: application/json' \
-            -H "Authorization: token ${{ secrets.}" \
+            -H "Authorization: token ${{ secrets.PLAYGROUND_DISPATCH_TOKEN }}" \
             -H 'Content-Type: application/json' \
             -d '{"ref": "main"}'
 
