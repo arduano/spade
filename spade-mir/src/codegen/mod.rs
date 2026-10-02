@@ -66,9 +66,9 @@ fn statement_declaration(
                     crate::types::Type::Memory { inner, length } => {
                         let inner_w = inner.size();
                         if inner_w > 1u32.to_biguint() {
-                            format!("logic[{inner_w}-1:0] {name}[{length}-1:0];")
+                            format!("logic[{inner_w}-1:0] {name}[0:{length}-1];")
                         } else {
-                            format!("logic {name}[{length}-1:0];")
+                            format!("logic {name}[0:{length}-1];")
                         }
                     }
                     _ => logic(&name, &binding.ty.size()),
@@ -3193,7 +3193,7 @@ mod expression_tests {
 
         let expected = indoc!(
             r#"
-            logic[6-1:0] _e_0[16-1:0];
+            logic[6-1:0] _e_0[0:16-1];
             always @(posedge _e_1) begin
                 if (_e_2[10]) begin
                     _e_0[_e_2[9:6]] <= _e_2[5:0];
@@ -3231,7 +3231,7 @@ mod expression_tests {
 
         let expected = indoc!(
             r#"
-            logic[6-1:0] _e_0[2-1:0];
+            logic[6-1:0] _e_0[0:2-1];
             always @(posedge _e_1) begin
                 if (_e_2[7]) begin
                     _e_0[_e_2[6]] <= _e_2[5:0];
@@ -3268,7 +3268,7 @@ mod expression_tests {
 
         let expected = indoc!(
             r#"
-            logic _e_0[16-1:0];
+            logic _e_0[0:16-1];
             always @(posedge _e_1) begin
                 if (_e_2[5]) begin
                     _e_0[_e_2[4:1]] <= _e_2[0];
@@ -3310,7 +3310,7 @@ mod expression_tests {
 
         let expected = indoc!(
             r#"
-            logic[6-1:0] _e_0[16-1:0];
+            logic[6-1:0] _e_0[0:16-1];
             initial begin
                 _e_0 = '{
                     'b001010,
