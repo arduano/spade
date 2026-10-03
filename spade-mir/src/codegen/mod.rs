@@ -585,10 +585,11 @@ fn forward_expression_code(
             let initial_block = if let Some(vals) = initial {
                 let assignments = vals
                     .iter()
-                    .map(|v| {
-                        let val = eval_statements(v).as_string();
-
-                        format!("'b{val},")
+                    .enumerate()
+                    .map(|(idx, val)| {
+                        let v = eval_statements(val).as_string();
+                        let s = v.len();
+                        format!("{s}'b{v}{}", if idx == vals.len() - 1 { "" } else { "," })
                     })
                     .collect::<Vec<_>>();
                 code! {
@@ -3304,8 +3305,8 @@ mod expression_tests {
             logic[6-1:0] _e_0[0:16-1];
             initial begin
                 _e_0 = '{
-                    'b001010,
-                    'b000101,
+                    6'b001010,
+                    6'b000101
                 };
             end
             always @(posedge _e_1) begin
