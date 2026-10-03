@@ -1,0 +1,19 @@
+---
+source: spade-tests/src/parser.rs
+---
+fn top() -> int<8> {
+    8i8 >>> 1i8
+}
+
+
+warning: Use of deprecated shift syntax
+  ┌─ testinput:2:9
+  │
+2 │     8i8 >>> 1i8
+  │         ^^^ `>>>` is deprecated
+  │
+  = note: `>>` already performs both arithmetic and logical shifts and based on operand types
+  = Consider replacing it with `>>`
+  │
+2 │     8i8 >> 1i8
+  │         ~~

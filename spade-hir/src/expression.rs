@@ -24,7 +24,6 @@ pub enum BinaryOperator {
     Mod,
     LeftShift,
     RightShift,
-    ArithmeticRightShift,
 }
 
 impl std::fmt::Display for BinaryOperator {
@@ -37,7 +36,6 @@ impl std::fmt::Display for BinaryOperator {
             BinaryOperator::Mod => write!(f, "%"),
             BinaryOperator::LeftShift => write!(f, ">>"),
             BinaryOperator::RightShift => write!(f, "<<"),
-            BinaryOperator::ArithmeticRightShift => write!(f, ">>>"),
         }
     }
 }

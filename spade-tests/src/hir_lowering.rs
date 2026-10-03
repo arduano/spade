@@ -158,25 +158,6 @@ mod tests {
     }
 
     #[test]
-    fn a_arithmetic_right_shifter_is_buildable() {
-        let code = r#"
-        entity name(a: int<16>, b: int<16>) -> int<16> {
-            a >>> b
-        }
-        "#;
-
-        let expected = entity!(&["name"]; (
-                "a", n(0, "a"), Type::int(16),
-                "b", n(1, "b"), Type::int(16)
-            ) -> Type::int(16); {
-                (e(0); Type::int(16); ArithmeticRightShift; n(0, "a"), n(1, "b"))
-            } => e(0)
-        );
-
-        assert_same_mir!(&build_entity!(code), &expected);
-    }
-
-    #[test]
     fn usub_without_spaces_codegens_correctly() {
         let code = r#"
         entity name(a: int<16>) -> int<16> {

@@ -333,7 +333,6 @@ fn forward_expression_code(
         Operator::UnsignedLe => binop!("<="; zst => "1'b1"),
         Operator::LeftShift => binop!("<<"),
         Operator::RightShift => binop!(">>"),
-        Operator::ArithmeticRightShift => signed_binop!(">>>"),
         Operator::LogicalAnd => binop!("&&"),
         Operator::LogicalOr => binop!("||"),
         Operator::LogicalXor => binop!("^"),
@@ -858,7 +857,6 @@ fn backward_expression_code(
         | Operator::UnsignedLe
         | Operator::LeftShift
         | Operator::RightShift
-        | Operator::ArithmeticRightShift
         | Operator::LogicalAnd
         | Operator::LogicalOr
         | Operator::LogicalXor
@@ -2415,13 +2413,6 @@ mod expression_tests {
         "[1:0]",
         RightShift,
         ">>"
-    );
-    signed_binop_test!(
-        binop_arithmetic_right_shift_works,
-        Type::int(2),
-        "[1:0]",
-        ArithmeticRightShift,
-        ">>>"
     );
     binop_test!(binop_eq_works, Type::Bool, "", Eq, "==");
     signed_binop_test!(binop_gt_works, Type::Bool, "", Gt, ">");

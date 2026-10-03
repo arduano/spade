@@ -150,8 +150,7 @@ impl LocExprExt for Loc<hir::Expression> {
                         | BinaryOperator::Div
                         | BinaryOperator::Mod
                         | BinaryOperator::LeftShift
-                        | BinaryOperator::RightShift
-                        | BinaryOperator::ArithmeticRightShift => Some(self.clone()),
+                        | BinaryOperator::RightShift => Some(self.clone()),
                     }
                 }
             }
@@ -1457,7 +1456,6 @@ impl ExprLocal for Loc<Expression> {
                     BinaryOperator::Mul => dual_binop_builder!(Mul, UnsignedMul),
                     BinaryOperator::LeftShift => binop_builder!(LeftShift),
                     BinaryOperator::RightShift => binop_builder!(RightShift),
-                    BinaryOperator::ArithmeticRightShift => binop_builder!(ArithmeticRightShift),
                     BinaryOperator::Div => {
                         match &rhs.inner.kind {
                             ExprKind::IntLiteral(val, _) => {

@@ -263,7 +263,6 @@ pub fn eval_statements(statements: &[Loc<Statement>]) -> Value {
                     Operator::UnsignedLe => todo!(),
                     Operator::LeftShift => todo!(),
                     Operator::RightShift => todo!(),
-                    Operator::ArithmeticRightShift => todo!(),
                     Operator::LogicalAnd => todo!(),
                     Operator::LogicalOr => todo!(),
                     Operator::LogicalXor => todo!(),

@@ -288,6 +288,20 @@ impl<'a> Parser<'a> {
                 let op_tok = self.eat_unconditional()?;
 
                 let rhs = self.expr_bp(op_power, braces)?;
+
+                if op == BinaryOperator::ArithmeticRightShift {
+                    self.diags.errors.push(
+                        Diagnostic::warning(op_tok.loc(), "Use of deprecated shift syntax")
+                            .primary_label("`>>>` is deprecated")
+                            .note("`>>` already performs both arithmetic and logical shifts and based on operand types")
+                            .span_suggest_replace(
+                                "Consider replacing it with `>>`",
+                                op_tok.loc(),
+                                ">>",
+                            ),
+                    );
+                }
+
                 lhs = Expression::BinaryOperator(
                     Box::new(lhs.clone()),
                     op.at(self.file_id(), &op_tok),

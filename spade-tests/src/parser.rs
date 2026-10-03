@@ -1195,3 +1195,12 @@ snapshot_error! {
         }
     "
 }
+
+snapshot_error! {
+    arithmetic_shift_is_deprecated,
+    "
+        fn top() -> int<8> {
+            8i8 >>> 1i8
+        }
+    "
+}

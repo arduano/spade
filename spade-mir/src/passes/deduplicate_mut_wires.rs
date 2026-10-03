@@ -74,7 +74,6 @@ fn op_needs_deduplication(op: &Operator) -> bool {
         | Operator::UnsignedLe
         | Operator::LeftShift
         | Operator::RightShift
-        | Operator::ArithmeticRightShift
         | Operator::LogicalAnd
         | Operator::LogicalOr
         | Operator::LogicalXor

@@ -944,9 +944,7 @@ impl TypeState {
                     self.unify_expression_generic_error(expression, &rhs.inner, ctx)?;
                 },
                 // Shift operators have the same width in as they do out
-                BinaryOperator::LeftShift
-                | BinaryOperator::ArithmeticRightShift
-                | BinaryOperator::RightShift => {
+                BinaryOperator::LeftShift | BinaryOperator::RightShift => {
                     let (int_type, _size) = self.new_generic_number(expression.loc(), ctx);
 
                     // FIXME: Make generic over types that can be bitmanipulated

@@ -2204,9 +2204,7 @@ fn visit_expression_result(e: &ast::Expression, ctx: &mut Context) -> Result<hir
                 ast::BinaryOperator::Le => Ok(op_method("le", "PartialOrd", vec![])?),
                 ast::BinaryOperator::LeftShift => Ok(op(BinaryOperator::LeftShift)),
                 ast::BinaryOperator::RightShift => Ok(op(BinaryOperator::RightShift)),
-                ast::BinaryOperator::ArithmeticRightShift => {
-                    Ok(op(BinaryOperator::ArithmeticRightShift))
-                }
+                ast::BinaryOperator::ArithmeticRightShift => Ok(op(BinaryOperator::RightShift)),
                 ast::BinaryOperator::WrappingAdd => {
                     Ok(op_method("wrapping_add", "WrappingAdd", vec![])?)
                 }
