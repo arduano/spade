@@ -514,8 +514,7 @@ fn forward_expression_code(
             )
         }
         Operator::IndexArray => {
-            let stripped_type = types[&ops[0]].strip_copy_view_layers();
-            let Type::Array { length, .. } = stripped_type else {
+            let Type::Array { length, .. } = &types[&ops[0]] else {
                 panic!("Array index with non-array input");
             };
             let member_size = self_type.size();

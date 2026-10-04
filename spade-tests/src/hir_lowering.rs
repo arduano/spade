@@ -2797,3 +2797,13 @@ snapshot_mir! {
         }
     "
 }
+
+code_compiles! {
+    use_of_destructed_copy_view_does_not_panic,
+    "
+        fn test() -> [bool; 1] {
+            let x = [false; 3];
+            (*&x)[0..1]
+        }
+    "
+}
